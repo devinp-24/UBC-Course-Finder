@@ -6,7 +6,6 @@ import {
 	InsightResult,
 	NotFoundError
 } from "./IInsightFacade";
-import {getContentFromArchives} from "../../test/TestUtil";
 import Section from "../dataModels/Section";
 import JSZip from "jszip";
 import CourseData from "../dataModels/CourseData";
