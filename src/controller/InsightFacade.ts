@@ -75,15 +75,43 @@ export default class InsightFacade implements IInsightFacade {
 
 
 	public async removeDataset(id: string): Promise<string> {
-		return Promise.reject("Not implemented.");
+		return new Promise<string>((resolve, reject) => {
+			try {
+				if (!id || id.includes("_") || id.trim() === "") {
+					throw new InsightError("Invalid ID");
+				}
 
+				const index = this.datasetCollection.indexOf(id);
+				if (index === -1) {
+					throw new NotFoundError("Dataset not found");
+				}
+
+				this.datasetCollection.splice(index, 1);
+				this.courseDataCollection.splice(index, 1);
+
+				resolve(id);
+			} catch (error) {
+				reject(error);
+			}
+		});
 	}
+
 
 	public async performQuery(query: unknown): Promise<InsightResult[]> {
 		return Promise.reject("Not implemented.");
 	}
 
 	public async listDatasets(): Promise<InsightDataset[]> {
-		return Promise.reject("Not implemented.");
+		return new Promise<InsightDataset[]>((resolve, reject) => {
+			try {
+				const datasetList: InsightDataset[] = [];
+				for (const courseData of this.courseDataCollection) {
+					datasetList.push(courseData.insightDataset);
+				}
+				resolve(datasetList);
+			} catch (error) {
+				reject(new InsightError("Failed to list datasets"));
+			}
+		});
 	}
 }
