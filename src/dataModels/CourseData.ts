@@ -2,7 +2,6 @@ import {InsightDataset, InsightDatasetKind} from "../controller/IInsightFacade";
 import Section from "./Section";
 
 export default class CourseData {
-
 	public id: string;
 	public insightDatasetKind: InsightDatasetKind;
 	public insightDataset: InsightDataset;
@@ -15,33 +14,34 @@ export default class CourseData {
 		this.insightDataset = {id: id, kind: insightDatasetKind, numRows: this.sections.length};
 
 		for (let course of coursesList) {
-			let parsedSection: JSON;
-			parsedSection = JSON.parse(course);
-			this.parse(parsedSection);
+			let parsedCourse = JSON.parse(course);
+			this.parse(parsedCourse);
 		}
 	}
 
 	public parse(courses: any) {
-		for (let counter of courses) {
-			let uuid = courses.result[counter].id;
-			let courseID = courses.result[counter].Course;
-			let title = courses.result[counter].Title;
-			let instructor = courses[counter].result.Professor;
-			let dept = courses.result[counter].Subject;
-			let year = courses.result[counter].Year;
-			let avg = courses.result[counter].Avg;
-			let pass = courses.result[counter].Pass;
-			let fail = courses.result[counter].Fail;
-			let audit = courses.result[counter].Audit;
+		if (!courses || !courses.result || !Array.isArray(courses.result)) {
+			throw new Error("Invalid JSON format");
+		}
 
-			if (courses.result[counter].Section === "overall") {
+		for (let course of courses.result) {
+			let uuid = course.id;
+			let courseID = course.Course;
+			let title = course.Title;
+			let instructor = course.Professor; // Corrected property name
+			let dept = course.Subject;
+			let year = course.Year;
+			let avg = course.Avg;
+			let pass = course.Pass;
+			let fail = course.Fail;
+			let audit = course.Audit;
+			if (course.Section === "overall") { // Corrected property name
 				year = 1900;
 			}
-
-			let section = new Section(uuid, courseID, title, instructor, dept, year, avg,
-				pass, fail, audit);
+			let section = new Section(uuid, courseID, title, instructor, dept, year, avg, pass, fail, audit);
 			this.sections.push(section);
 		}
+
 		this.insightDataset.numRows = this.sections.length;
 	}
 }
