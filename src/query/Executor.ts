@@ -1,6 +1,7 @@
 import {Query, Filter, LogicComparison, MComparison, SComparison, Options, Negation} from "../dataModels/Query";
 import CourseData from "../dataModels/CourseData";
 import Section from "../dataModels/Section";
+import {ResultTooLargeError} from "../controller/IInsightFacade";
 
 export class Executor {
 	public extractDatasetId(query: Query): string {
@@ -58,7 +59,6 @@ export class Executor {
 
 	public applyFilters(courseData: CourseData, filter: Filter): Section[] {
 		if (Object.keys(filter).length === 0) {
-			console.log("0");
 			// If the filter is empty, return all sections
 			return courseData.sections;
 		}
@@ -85,10 +85,6 @@ export class Executor {
 	}
 
 	private evaluateFilter(section: Section, filter: Filter): boolean {
-		// console.log(filter);
-		// const temp = Object.keys((filter as any)[Object.keys(filter)[0]])[0];
-		// const temp2 = temp.split("_");
-		// console.log(section.get(temp2[1]));
 		if (this.isLogicComparison(filter)) {
 			if (filter.AND) {
 				return filter.AND.every((subFilter) => this.evaluateFilter(section, subFilter));
@@ -100,11 +96,23 @@ export class Executor {
 		} else if (this.isNegation(filter)) {
 			return !this.evaluateFilter(section, filter.NOT);
 		} else if (this.isSComparison(filter)) {
-			const key = Object.keys(filter.IS)[0];
+			const [key, comparisonValue] = Object.entries(filter.IS)[0];
 			const keyParts = key.split("_");
 			const value = filter.IS[key];
+			const getValue = section.get(keyParts[1]) as string;
 			// Assuming wildcards are not to be implemented in this example
-			return section.get(keyParts[1]) === value;
+			if (comparisonValue.startsWith("*") && comparisonValue.endsWith("*")) {
+				const trimmedValue = comparisonValue.slice(1, -1);
+				return getValue.includes(trimmedValue);
+			} else if (comparisonValue.startsWith("*")) {
+				const trimmedValue = comparisonValue.slice(1);
+				return getValue.endsWith(trimmedValue);
+			} else if (comparisonValue.endsWith("*")) {
+				const trimmedValue = comparisonValue.slice(0, -1);
+				return getValue.startsWith(trimmedValue);
+			} else {
+				return getValue === value;
+			}
 		} else if (this.isMComparison(filter)) {
 			const comparatorKey = Object.keys(filter)[0];
 			const key = Object.keys((filter as any)[comparatorKey])[0];
@@ -137,21 +145,23 @@ export class Executor {
 			});
 			return result;
 		});
-
+		if (results.length > 5000) {
+			throw new ResultTooLargeError("Oh no");
+		}
 		// Step 2: Sort the results if an ORDER key is specified
-		// if (options.ORDER) {
-		// 	const orderKey = options.ORDER;
-		// 	console.log(orderKey);
-		// 	results.sort((a, b) => {
-		// 		if (a[orderKey] < b[orderKey]) {
-		// 			return -1;
-		// 		} else if (a[orderKey] > b[orderKey]) {
-		// 			return 1;
-		// 		} else {
-		// 			return 0;
-		// 		}
-		// 	});
-		// }
+		if (options.ORDER) {
+			const orderKey = options.ORDER;
+			// console.log(orderKey);
+			results.sort((a, b) => {
+				if (a[orderKey] < b[orderKey]) {
+					return -1;
+				} else if (a[orderKey] > b[orderKey]) {
+					return 1;
+				} else {
+					return 0;
+				}
+			});
+		}
 
 		return results;
 	}
