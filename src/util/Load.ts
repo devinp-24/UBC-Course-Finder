@@ -48,8 +48,21 @@ export class Load {
 		let datasetCollection: string[] = [];
 		let courseDataCollection: CourseData[] = [];
 
+		const dataDir = "./data"; // Adjust the path to your data directory as needed
+
+		const dirExists = await fse.pathExists(dataDir);
+		if (!dirExists) {
+			console.log("Data directory does not exist.");
+			return {datasetCollection, courseDataCollection}; // Return the empty arrays
+		}
+
+		const files = await fse.readdir("./data");
+		if (files.length === 0) {
+			console.log("Data directory is empty.");
+			return {datasetCollection, courseDataCollection}; // Return the empty arrays
+		}
+
 		try {
-			const files = await fse.readdir("./data");
 			const jsonFiles = files.filter((file) => file.endsWith(".json"));
 			const readJsonPromises = jsonFiles.map((file) => {
 				return fse.readJson(`./data/${file}`);
