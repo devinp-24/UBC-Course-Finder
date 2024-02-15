@@ -122,7 +122,7 @@ export default class InsightFacade implements IInsightFacade {
 
 			// Step 4: Apply sorting and column selection based on OPTIONS
 			const finalResults = this.queryExecutor.formatResults(filteredResults, parsedQuery.OPTIONS);
-			console.log(finalResults.length);
+			// console.log(finalResults.length);
 			// Step 5: Check for result size constraints
 			if (finalResults.length > MAX_RESULTS) {
 				throw new ResultTooLargeError("The query results exceed the allowed limit.");
@@ -130,8 +130,11 @@ export default class InsightFacade implements IInsightFacade {
 
 			return finalResults;
 		} catch (error) {
-			// Handle parsing, validation, and execution errors
-			throw new InsightError("l");
+			if (error instanceof ResultTooLargeError) {
+				throw new ResultTooLargeError("ll");
+			} else {
+				throw new InsightError("l");
+			}
 		}
 	}
 
