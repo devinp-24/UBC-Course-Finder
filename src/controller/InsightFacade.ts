@@ -12,7 +12,8 @@ import CourseData from "../dataModels/CourseData";
 import {Parser} from "../query/Parser";
 import {Validator} from "../query/Validator";
 import {Executor} from "../query/Executor";
-import * as fs from "fs-extra";
+import * as fse from "fs-extra";
+import * as fs from "fs";
 import {Load} from "../util/Load";
 /**
  * This is the main programmatic entry point for the project.
@@ -46,9 +47,10 @@ export default class InsightFacade implements IInsightFacade {
 		let zipFile = JSZip();
 		let info = Array<Promise<string>>();
 		let dataset: CourseData;
+		const checkIdExists = await this.loader.checkDatasetExists(id);
 		return new Promise<string[]>((resolve, reject) => {
 			try {
-				if (!id || id.includes("_") || id.trim() === "" || this.datasetCollection.includes(id) ||
+				if (!id || id.includes("_") || id.trim() === "" || !(checkIdExists) ||
 					kind !== InsightDatasetKind.Sections || content === null) {
 					throw new InsightError("Error");
 				}
@@ -64,21 +66,20 @@ export default class InsightFacade implements IInsightFacade {
 						coursesFolder.forEach(function (relativePath, file) {
 							info.push(file.async("text"));
 						});
-						Promise.all(info).then((promise: string[]) => {
+						Promise.all(info).then(async (promise: string[]) => {
 							dataset = new CourseData(id, kind, promise);
 							if (dataset.sections.length === 0) {
 								return reject(new InsightError("No valid sections to add"));
 							}
-							this.datasetCollection.push(id);
-							this.courseDataCollection.push(dataset);
-							fs.ensureDirSync("./data");
+							// this.datasetCollection.push(id);
+							// this.courseDataCollection.push(dataset);
+							await fse.ensureDir("./data");
 							const filePath = `./data/${id}.json`;
-							fs.writeJsonSync(filePath, {
+							await fse.writeJson(filePath, {
 								id: id,
 								kind: kind,
 								sections: dataset.sections
 							});
-							resolve(this.datasetCollection);
 						}).catch((err: any) => {
 							reject("Error");
 						});
@@ -109,12 +110,12 @@ export default class InsightFacade implements IInsightFacade {
 		const filePath = `./data/${id}.json`;
 
 		// Start the promise chain
-		return fs.pathExists(filePath)
+		return fse.pathExists(filePath)
 			.then((exists) => {
 				if (exists) {
-					return fs.remove(filePath); // Remove the file if it exists
+					return fse.remove(filePath); // Remove the file if it exists
 				} else {
-					console.warn(`Dataset file for ${id} was not found on disk.`);
+					return Promise.reject(new NotFoundError("Dataset not found"));
 				}
 			})
 			.then(() => id) // Resolve with the dataset id if successful
@@ -166,12 +167,12 @@ export default class InsightFacade implements IInsightFacade {
 
 	public async listDatasets(): Promise<InsightDataset[]> {
 		try {
-			const files = await fs.readdir("./data"); // Read all files in the data directory
+			const files = await fse.readdir("./data"); // Read all files in the data directory
 			const datasets = await Promise.all(
 				files.filter((file) => file.endsWith(".json")).map(async (file) => {
 					// For each dataset file, read its content to extract dataset info
 					const filePath = `./data/${file}`;
-					const data = await fs.readJson(filePath);
+					const data = await fse.readJson(filePath);
 
 					// Construct an InsightDataset object
 					// Assuming the file contains properties id, kind, and numRows
