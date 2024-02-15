@@ -151,7 +151,6 @@ export class Executor {
 		// Step 2: Sort the results if an ORDER key is specified
 		if (options.ORDER) {
 			const orderKey = options.ORDER;
-			// console.log(orderKey);
 			results.sort((a, b) => {
 				if (a[orderKey] < b[orderKey]) {
 					return -1;
