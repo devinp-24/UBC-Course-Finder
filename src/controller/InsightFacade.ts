@@ -4,12 +4,15 @@ import {
 	InsightDatasetKind,
 	InsightError,
 	InsightResult,
-	NotFoundError
+	NotFoundError, ResultTooLargeError
 } from "./IInsightFacade";
 import {getContentFromArchives} from "../../test/TestUtil";
 import Section from "../dataModels/Section";
 import JSZip from "jszip";
 import CourseData from "../dataModels/CourseData";
+import {Parser} from "../query/Parser";
+import {Validator} from "../query/Validator";
+import {Executor} from "../query/Executor";
 /**
  * This is the main programmatic entry point for the project.
  * Method documentation is in IInsightFacade
@@ -18,8 +21,14 @@ import CourseData from "../dataModels/CourseData";
 export default class InsightFacade implements IInsightFacade {
 	private datasetCollection: string[] = [];
 	private courseDataCollection: CourseData[] = [];
+	private queryParser: Parser;
+	private queryValidator: Validator;
+	private queryExecutor: Executor;
 	constructor() {
 		console.log("InsightFacadeImpl::init()");
+		this.queryParser = new Parser();
+		this.queryValidator = new Validator();
+		this.queryExecutor = new Executor();
 	}
 
 	public async addDataset(id: string, content: string, kind: InsightDatasetKind): Promise<string[]> {
@@ -73,7 +82,6 @@ export default class InsightFacade implements IInsightFacade {
 		});
 	}
 
-
 	public async removeDataset(id: string): Promise<string> {
 		return new Promise<string>((resolve, reject) => {
 			try {
@@ -96,9 +104,36 @@ export default class InsightFacade implements IInsightFacade {
 		});
 	}
 
-
 	public async performQuery(query: unknown): Promise<InsightResult[]> {
-		return Promise.reject("Not implemented.");
+		const MAX_RESULTS = 5000;
+		try {
+			// Use QueryParser to parse the query
+			const parsedQuery = this.queryParser.parseQuery(query);
+			const validatedQuery = this.queryValidator.validateQuery(parsedQuery);
+
+			// Step 2: Retrieve the dataset referenced in the query
+			const datasetId = this.queryExecutor.extractDatasetId(parsedQuery);
+			const dataset = this.courseDataCollection[this.datasetCollection.indexOf(datasetId)];
+			if (!dataset) {
+				throw new InsightError("Dataset not found");
+			}
+
+			// Step 3: Apply filters defined in the WHERE clause
+			const filteredResults = this.queryExecutor.applyFilters(dataset, parsedQuery.WHERE);
+
+			// Step 4: Apply sorting and column selection based on OPTIONS
+			const finalResults = this.queryExecutor.formatResults(filteredResults, parsedQuery.OPTIONS);
+			console.log(finalResults.length);
+			// Step 5: Check for result size constraints
+			if (finalResults.length > MAX_RESULTS) {
+				throw new ResultTooLargeError("The query results exceed the allowed limit.");
+			}
+
+			return finalResults;
+		} catch (error) {
+			// Handle parsing, validation, and execution errors
+			throw new InsightError("l");
+		}
 	}
 
 	public async listDatasets(): Promise<InsightDataset[]> {

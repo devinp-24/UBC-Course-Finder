@@ -7,6 +7,7 @@ import {
 import {assert, expect, use} from "chai";
 import chaiAsPromised from "chai-as-promised";
 import {clearDisk, getContentFromArchives, readFileQueries} from "../TestUtil";
+import {Parser} from "../../src/query/Parser";
 
 use(chaiAsPromised);
 
@@ -178,7 +179,9 @@ describe("InsightFacade", function () {
 			validQueries.forEach(function(test: any) {
 				it(`${test.title}`, function () {
 					return facade.performQuery(test.input).then((result) => {
-						assert.fail("Write your assertions here!");
+						// console.log(test.expected);
+						// console.log(result);
+						expect(result).to.deep.equal(test.expected);
 					}).catch((err: any) => {
 						assert.fail(`performQuery threw unexpected error: ${err}`);
 					});
