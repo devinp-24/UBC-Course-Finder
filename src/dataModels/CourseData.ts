@@ -7,16 +7,21 @@ export default class CourseData {
 	public insightDataset: InsightDataset;
 	public sections: Section[];
 
-	constructor(id: string, insightDatasetKind: InsightDatasetKind, coursesList: string[]) {
+	constructor(id: string, insightDatasetKind: InsightDatasetKind, coursesList: any[]) {
 		this.id = id;
 		this.insightDatasetKind = insightDatasetKind;
 		this.sections = [];
 		this.insightDataset = {id: id, kind: insightDatasetKind, numRows: this.sections.length};
 
+		// let counter = 0;
+
 		for (let course of coursesList) {
 			let parsedCourse = JSON.parse(course);
 			this.parse(parsedCourse);
+			// counter++;
+			// console.log(counter);
 		}
+		// console.log(this.sections);
 	}
 
 	public parse(courses: any) {
