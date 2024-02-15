@@ -12,6 +12,8 @@ import CourseData from "../dataModels/CourseData";
 import {Parser} from "../query/Parser";
 import {Validator} from "../query/Validator";
 import {Executor} from "../query/Executor";
+import * as fs from "fs-extra";
+import {Load} from "../util/Load";
 /**
  * This is the main programmatic entry point for the project.
  * Method documentation is in IInsightFacade
@@ -23,31 +25,32 @@ export default class InsightFacade implements IInsightFacade {
 	private queryParser: Parser;
 	private queryValidator: Validator;
 	private queryExecutor: Executor;
+	private loader: Load;
+
 	constructor() {
 		console.log("InsightFacadeImpl::init()");
 		this.queryParser = new Parser();
 		this.queryValidator = new Validator();
 		this.queryExecutor = new Executor();
+		this.loader = new Load();
+		this.loader.loadExistingDatasets().then(({datasetCollection, courseDataCollection}) => {
+			this.datasetCollection = datasetCollection;
+			this.courseDataCollection = courseDataCollection;
+			console.log("Datasets initialized successfully");
+		}).catch((error) => {
+			console.error("Failed to initialize datasets", error);
+		});
 	}
 
 	public async addDataset(id: string, content: string, kind: InsightDatasetKind): Promise<string[]> {
 		let zipFile = JSZip();
 		let info = Array<Promise<string>>();
-		let functionPromise: Promise<string[]>;
 		let dataset: CourseData;
 		return new Promise<string[]>((resolve, reject) => {
 			try {
-				if (!id || id.includes("_") || id.trim() === "") {
-					throw new InsightError("Invalid ID");
-				}
-				if (this.datasetCollection.includes(id)) {
-					throw new InsightError("ID already exists");
-				}
-				if (kind !== InsightDatasetKind.Sections) {
-					throw new InsightError("Invalid Kind Type");
-				}
-				if (content === null) {
-					throw new InsightError("Content should not be empty");
+				if (!id || id.includes("_") || id.trim() === "" || this.datasetCollection.includes(id) ||
+					kind !== InsightDatasetKind.Sections || content === null) {
+					throw new InsightError("Error");
 				}
 				zipFile.loadAsync(content, {base64: true})
 					.then((zip: JSZip) => {
@@ -68,6 +71,13 @@ export default class InsightFacade implements IInsightFacade {
 							}
 							this.datasetCollection.push(id);
 							this.courseDataCollection.push(dataset);
+							fs.ensureDirSync("./data");
+							const filePath = `./data/${id}.json`;
+							fs.writeJsonSync(filePath, {
+								id: id,
+								kind: kind,
+								sections: dataset.sections
+							});
 							resolve(this.datasetCollection);
 						}).catch((err: any) => {
 							reject("Error");
@@ -81,26 +91,42 @@ export default class InsightFacade implements IInsightFacade {
 		});
 	}
 
-	public async removeDataset(id: string): Promise<string> {
-		return new Promise<string>((resolve, reject) => {
-			try {
-				if (!id || id.includes("_") || id.trim() === "") {
-					throw new InsightError("Invalid ID");
+	public removeDataset(id: string): Promise<string> {
+		if (!id || id.includes("_") || id.trim() === "") {
+			return Promise.reject(new InsightError("Invalid ID"));
+		}
+
+		const index = this.datasetCollection.indexOf(id);
+		if (index === -1) {
+			return Promise.reject(new NotFoundError("Dataset not found"));
+		}
+
+		// Prepare for removal from internal state
+		this.datasetCollection.splice(index, 1);
+		this.courseDataCollection.splice(index, 1); // Assuming corresponding index
+
+		// Path to the dataset file
+		const filePath = `./data/${id}.json`;
+
+		// Start the promise chain
+		return fs.pathExists(filePath)
+			.then((exists) => {
+				if (exists) {
+					return fs.remove(filePath); // Remove the file if it exists
+				} else {
+					console.warn(`Dataset file for ${id} was not found on disk.`);
 				}
-
-				const index = this.datasetCollection.indexOf(id);
-				if (index === -1) {
-					throw new NotFoundError("Dataset not found");
-				}
-
-				this.datasetCollection.splice(index, 1);
-				this.courseDataCollection.splice(index, 1);
-
-				resolve(id);
-			} catch (error) {
-				reject(error);
-			}
-		});
+			})
+			.then(() => id) // Resolve with the dataset id if successful
+			.catch((error) => {
+				// Propagate the error by re-throwing it
+				throw new InsightError(`Failed to remove dataset: ${error}`);
+			})
+			.finally(() => {
+				// Code in this block will run regardless of the promise's outcome
+				console.log(`Attempted to remove dataset with ID: ${id}`);
+				// Any cleanup or logging can be performed here
+			});
 	}
 
 	public async performQuery(query: unknown): Promise<InsightResult[]> {
@@ -139,16 +165,29 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	public async listDatasets(): Promise<InsightDataset[]> {
-		return new Promise<InsightDataset[]>((resolve, reject) => {
-			try {
-				const datasetList: InsightDataset[] = [];
-				for (const courseData of this.courseDataCollection) {
-					datasetList.push(courseData.insightDataset);
-				}
-				resolve(datasetList);
-			} catch (error) {
-				reject(new InsightError("Failed to list datasets"));
-			}
-		});
+		try {
+			const files = await fs.readdir("./data"); // Read all files in the data directory
+			const datasets = await Promise.all(
+				files.filter((file) => file.endsWith(".json")).map(async (file) => {
+					// For each dataset file, read its content to extract dataset info
+					const filePath = `./data/${file}`;
+					const data = await fs.readJson(filePath);
+
+					// Construct an InsightDataset object
+					// Assuming the file contains properties id, kind, and numRows
+					// Adjust based on your actual file structure
+					return {
+						id: data.id,
+						kind: data.kind as InsightDatasetKind,
+						numRows: data.sections.length, // Example: counting the number of sections
+					};
+				})
+			);
+
+			return datasets;
+		} catch (error) {
+			console.error("Failed to list datasets:", error);
+			throw error; // Rethrow or handle as needed
+		}
 	}
 }
