@@ -13,7 +13,6 @@ import {Parser} from "../query/Parser";
 import {Validator} from "../query/Validator";
 import {Executor} from "../query/Executor";
 import * as fse from "fs-extra";
-import * as fs from "fs";
 import {Load} from "../util/Load";
 /**
  * This is the main programmatic entry point for the project.
@@ -47,10 +46,9 @@ export default class InsightFacade implements IInsightFacade {
 		let zipFile = JSZip();
 		let info = Array<Promise<string>>();
 		let dataset: CourseData;
-		const checkIdExists = await this.loader.checkDatasetExists(id);
 		return new Promise<string[]>((resolve, reject) => {
 			try {
-				if (!id || id.includes("_") || id.trim() === "" || !(checkIdExists) ||
+				if (!id || id.includes("_") || id.trim() === "" || this.datasetCollection.includes(id) ||
 					kind !== InsightDatasetKind.Sections || content === null) {
 					throw new InsightError("Error");
 				}
@@ -66,20 +64,21 @@ export default class InsightFacade implements IInsightFacade {
 						coursesFolder.forEach(function (relativePath, file) {
 							info.push(file.async("text"));
 						});
-						Promise.all(info).then(async (promise: string[]) => {
+						Promise.all(info).then((promise: string[]) => {
 							dataset = new CourseData(id, kind, promise);
 							if (dataset.sections.length === 0) {
 								return reject(new InsightError("No valid sections to add"));
 							}
-							// this.datasetCollection.push(id);
-							// this.courseDataCollection.push(dataset);
-							await fse.ensureDir("./data");
+							this.datasetCollection.push(id);
+							this.courseDataCollection.push(dataset);
+							fse.ensureDirSync("./data");
 							const filePath = `./data/${id}.json`;
-							await fse.writeJson(filePath, {
+							fse.writeJsonSync(filePath, {
 								id: id,
 								kind: kind,
 								sections: dataset.sections
 							});
+							resolve(this.datasetCollection);
 						}).catch((err: any) => {
 							reject("Error");
 						});
@@ -115,7 +114,7 @@ export default class InsightFacade implements IInsightFacade {
 				if (exists) {
 					return fse.remove(filePath); // Remove the file if it exists
 				} else {
-					return Promise.reject(new NotFoundError("Dataset not found"));
+					console.warn(`Dataset file for ${id} was not found on disk.`);
 				}
 			})
 			.then(() => id) // Resolve with the dataset id if successful
