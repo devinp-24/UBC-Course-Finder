@@ -179,8 +179,8 @@ describe("InsightFacade", function () {
 			validQueries.forEach(function(test: any) {
 				it(`${test.title}`, function () {
 					return facade.performQuery(test.input).then((result) => {
-						// console.log(test.expected);
-						// console.log(result);
+						console.log(test.expected);
+						console.log(result);
 						expect(result).to.deep.equal(test.expected);
 					}).catch((err: any) => {
 						assert.fail(`performQuery threw unexpected error: ${err}`);

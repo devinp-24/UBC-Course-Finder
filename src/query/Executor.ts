@@ -139,19 +139,19 @@ export class Executor {
 		});
 
 		// Step 2: Sort the results if an ORDER key is specified
-		// if (options.ORDER) {
-		// 	const orderKey = options.ORDER;
-		// 	console.log(orderKey);
-		// 	results.sort((a, b) => {
-		// 		if (a[orderKey] < b[orderKey]) {
-		// 			return -1;
-		// 		} else if (a[orderKey] > b[orderKey]) {
-		// 			return 1;
-		// 		} else {
-		// 			return 0;
-		// 		}
-		// 	});
-		// }
+		if (options.ORDER) {
+			const orderKey = options.ORDER;
+			console.log(orderKey);
+			results.sort((a, b) => {
+				if (a[orderKey] < b[orderKey]) {
+					return -1;
+				} else if (a[orderKey] > b[orderKey]) {
+					return 1;
+				} else {
+					return 0;
+				}
+			});
+		}
 
 		return results;
 	}
