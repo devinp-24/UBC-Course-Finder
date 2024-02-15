@@ -31,13 +31,13 @@ describe("InsightFacade", function () {
 	});
 
 	describe("AddDataset", function () {
-	
+
 		beforeEach(function () {
 			// This section resets the insightFacade instance
 			// This runs before each test
 			facade = new InsightFacade();
 		});
-	
+
 		afterEach(async function () {
 			// This section resets the data directory (removing any cached data)
 			// This runs after each test, which should make each test independent of the previous one
@@ -58,21 +58,21 @@ describe("InsightFacade", function () {
 			// Reset the InsightFacade instance before each test
 			facade = new InsightFacade();
 		});
-	
+
 		it("should reject with an empty dataset id", async function () {
 			const result = facade.removeDataset("");
 			return expect(result).to.eventually.be.rejectedWith(InsightError);
 		});
-	
+
 		it("should reject when dataset with given id does not exist", async function () {
 			const result = facade.removeDataset("nonexistentDataset");
 			return expect(result).to.eventually.be.rejectedWith(NotFoundError);
 		});
-	
+
 		it("should successfully remove an existing dataset", async function () {
 			// Add a dataset first
 			await facade.addDataset("ubc", sections, InsightDatasetKind.Sections);
-	
+
 			// Remove the added dataset
 			const result = facade.removeDataset("ubc");
 			return expect(result).to.eventually.equal("ubc");
@@ -94,23 +94,23 @@ describe("InsightFacade", function () {
 			return expect(result).to.eventually.be.rejectedWith(InsightError);
 		});
 	});
-	
+
 	/*
 	 * This test suite dynamically generates tests from the JSON files in test/resources/queries.
 	 * You can and should still make tests the normal way, this is just a convenient tool for a majority of queries.
 	 */
 	describe("ListDatasets", function () {
-	
+
 		beforeEach(function () {
 			// Reset the insightFacade instance before each test
 			facade = new InsightFacade();
 		});
-	
+
 		afterEach(async function () {
 			// Reset the data directory after each test
 			await clearDisk();
 		});
-	
+
 		it("should not list because the dataset is empty", async () => {
 			const result: InsightDataset[] = await facade.listDatasets();
 			expect(result).to.be.an("array").that.is.empty;
@@ -168,24 +168,24 @@ describe("InsightFacade", function () {
 	describe("PerformQuery", function () {
 		before(async function () {
 			facade = new InsightFacade();
-	
+
 			// Add the datasets to InsightFacade once.
 			// Will *fail* if there is a problem reading ANY dataset.
 			const loadDatasetPromises = [
 				facade.addDataset("sections", sections, InsightDatasetKind.Sections),
 			];
-	
+
 			try {
 				await Promise.all(loadDatasetPromises);
 			} catch(err) {
 				throw new Error(`In PerformQuery Before hook, dataset(s) failed to be added. \n${err}`);
 			}
 		});
-	
+
 		after(async function () {
 			await clearDisk();
 		});
-	
+
 		describe("valid queries", function() {
 			let validQueries: ITestQuery[];
 			try {
@@ -193,7 +193,7 @@ describe("InsightFacade", function () {
 			} catch (e: unknown) {
 				expect.fail(`Failed to read one or more test queries. ${e}`);
 			}
-	
+
 			validQueries.forEach(function(test: any) {
 				it(`${test.title}`, function () {
 					return facade.performQuery(test.input).then((result) => {
@@ -204,16 +204,16 @@ describe("InsightFacade", function () {
 				});
 			});
 		});
-	
+
 		describe("invalid queries", function() {
 			let invalidQueries: ITestQuery[];
-	
+
 			try {
 				invalidQueries = readFileQueries("invalid");
 			} catch (e: unknown) {
 				expect.fail(`Failed to read one or more test queries. ${e}`);
 			}
-	
+
 			invalidQueries.forEach(function(test: any) {
 				it(`${test.title}`, function () {
 					return facade.performQuery(test.input).then((result) => {
