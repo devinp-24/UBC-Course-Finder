@@ -5,6 +5,7 @@ import CourseData from "../dataModels/CourseData";
 export class DatasetCacheManager {
 	private dataDir = "./data/"; // Class property
 
+	// these helper methods were created with the help of chatGPT
 	public async saveDataset(id: string, data: any): Promise<void> {
 		await fse.ensureDir(this.dataDir); // Use the class property
 		const filePath = `${this.dataDir}${id}.json`;
