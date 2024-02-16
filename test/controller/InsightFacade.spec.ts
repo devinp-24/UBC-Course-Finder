@@ -579,7 +579,7 @@ describe("InsightFacade", function () {
 	describe("CachingProgress", function () {
 		let newInstance: InsightFacade;
 		before(async function() {
-			const facade2 = new InsightFacade();
+			facade2 = new InsightFacade();
 			await facade2.addDataset("ubc", sections, InsightDatasetKind.Sections);
 			newInstance = new InsightFacade();
 
