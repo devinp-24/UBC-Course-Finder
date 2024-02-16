@@ -28,10 +28,10 @@ export class Executor {
 	}
 
 	private extractIdsFromFilter(filter: Filter, datasetIds: Set<string>): void {
-		if (Object.keys(filter).length === 0) {
-			// Base case: empty filter
-			return;
-		}
+		// if (Object.keys(filter).length === 0) {
+		// 	// Base case: empty filter
+		// 	return;
+		// }
 
 		Object.entries(filter).forEach(([key, value]) => {
 			if (key === "AND" || key === "OR") {

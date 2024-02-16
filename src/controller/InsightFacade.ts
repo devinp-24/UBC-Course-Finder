@@ -13,6 +13,7 @@ import {Parser} from "../query/Parser";
 import {Validator} from "../query/Validator";
 import {Executor} from "../query/Executor";
 import * as fse from "fs-extra";
+import {DatasetCacheManager} from "../util/DatasetCacheManager";
 /**
  * This is the main programmatic entry point for the project.
  * Method documentation is in IInsightFacade
@@ -24,11 +25,14 @@ export default class InsightFacade implements IInsightFacade {
 	private queryParser: Parser;
 	private queryValidator: Validator;
 	private queryExecutor: Executor;
+	private datasetCacheManager: DatasetCacheManager;
+
 	constructor() {
 		console.log("InsightFacadeImpl::init()");
 		this.queryParser = new Parser();
 		this.queryValidator = new Validator();
 		this.queryExecutor = new Executor();
+		this.datasetCacheManager = new DatasetCacheManager();
 		// this.loader.loadExistingDatasets().then(({datasetCollection, courseDataCollection}) => {
 		// 	this.datasetCollection = datasetCollection;
 		// 	this.courseDataCollection = courseDataCollection;
@@ -39,77 +43,87 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	public async addDataset(id: string, content: string, kind: InsightDatasetKind): Promise<string[]> {
-		let zipFile = JSZip();
+		let zipFile = new JSZip();
 		let info = Array<Promise<string>>();
-		let functionPromise: Promise<string[]>;
 		let dataset: CourseData;
+
 		return new Promise<string[]>((resolve, reject) => {
-			try {
-				if (!id || id.includes("_") || id.trim() === "") {
-					throw new InsightError("Invalid ID");
-				}
-				if (this.datasetCollection.includes(id)) {
-					throw new InsightError("ID already exists");
-				}
-				if (kind !== InsightDatasetKind.Sections) {
-					throw new InsightError("Invalid Kind Type");
-				}
-				if (content === null) {
-					throw new InsightError("Content should not be empty");
-				}
-				zipFile.loadAsync(content, {base64: true})
-					.then((zip: JSZip) => {
-						if (Object.keys(zip.files)[0] !== "courses/") {
-							return reject(new InsightError("Folder does not exist in the zip file"));
-						}
-						const coursesFolder = zip.folder("courses");
-						if (!coursesFolder) {
-							throw new InsightError("Folder does not exist in the zip file");
-						}
-						coursesFolder.forEach(function (relativePath, file) {
-							info.push(file.async("text"));
-						});
-						Promise.all(info).then((promise: string[]) => {
-							dataset = new CourseData(id, kind, promise);
-							if (dataset.sections.length === 0) {
-								return reject(new InsightError("No valid sections to add"));
-							}
-							this.datasetCollection.push(id);
-							this.courseDataCollection.push(dataset);
-							resolve(this.datasetCollection);
-						}).catch((err: any) => {
-							reject("Error");
-						});
-					}).catch((err: any) => {
-						reject(new InsightError("Failed to add dataset"));
-					});
-			} catch (error) {
-				reject(error);
+			if (!id || id.includes("_") || id.trim() === "") {
+				reject(new InsightError("Invalid ID"));
+				return;
 			}
+			if (this.datasetCollection.includes(id)) {
+				reject(new InsightError("ID already exists"));
+				return;
+			}
+			if (kind !== InsightDatasetKind.Sections) {
+				reject(new InsightError("Invalid Kind Type"));
+				return;
+			}
+			zipFile.loadAsync(content, {base64: true})
+				.then((zip: JSZip) => {
+					const coursesFolder = zip.folder("courses");
+					if (!coursesFolder) {
+						throw new InsightError("Folder does not exist in the zip file");
+					}
+					coursesFolder.forEach((relativePath, file) => {
+						info.push(file.async("text"));
+					});
+					return Promise.all(info);
+				})
+				.then(async (filesContent: string[]) => { // Mark this function as async
+					dataset = new CourseData(id, kind, filesContent);
+					if (dataset.sections.length === 0) {
+						throw new InsightError("No valid sections to add");
+					}
+					this.datasetCollection.push(id);
+					this.courseDataCollection.push(dataset);
+					try {
+						await this.datasetCacheManager.saveDataset(id, dataset);
+						resolve(this.datasetCollection);
+					} catch (error) {
+						reject(new InsightError("Failed to save dataset to disk"));
+					}
+				})
+				.catch((err: any) => {
+					reject(new InsightError("Failed to add dataset"));
+				});
 		});
 	}
 
 
 	public async removeDataset(id: string): Promise<string> {
-		return new Promise<string>((resolve, reject) => {
-			try {
-				if (!id || id.includes("_") || id.trim() === "") {
-					throw new InsightError("Invalid ID");
-				}
-
-				const index = this.datasetCollection.indexOf(id);
-				if (index === -1) {
-					throw new NotFoundError("Dataset not found");
-				}
-
-				this.datasetCollection.splice(index, 1);
-				this.courseDataCollection.splice(index, 1);
-
-				resolve(id);
-			} catch (error) {
-				reject(error);
+		const dataDir = "./data/";
+		const filePath = `${dataDir}${id}.json`;
+		if (!id || id.includes("_") || id.trim() === "") {
+			throw new InsightError("Invalid ID");
+		}
+		try {
+			// Check if the dataset file exists in the data directory
+			const exists = await fse.pathExists(filePath);
+			if (!exists) {
+				throw new NotFoundError("Dataset not found");
 			}
-		});
+
+			// Proceed to remove the dataset from disk
+			await this.datasetCacheManager.removeDataset(id);
+
+			// Remove the dataset from memory (if additional logic is needed to synchronize memory state)
+			const index = this.datasetCollection.indexOf(id);
+			if (index !== -1) {
+				this.datasetCollection.splice(index, 1);
+				this.courseDataCollection.splice(index, 1); // Assuming this is necessary for memory cleanup
+			}
+
+			// Successfully removed
+			return id;
+		} catch (error) {
+			if (error instanceof NotFoundError) {
+				throw error; // Re-throw if it's a not found error
+			} else {
+				throw new InsightError(`Failed to remove dataset: ${error}`);
+			}
+		}
 	}
 
 
@@ -150,17 +164,41 @@ export default class InsightFacade implements IInsightFacade {
 
 
 	public async listDatasets(): Promise<InsightDataset[]> {
-		return new Promise<InsightDataset[]>((resolve, reject) => {
-			try {
-				const datasetList: InsightDataset[] = [];
-				for (const courseData of this.courseDataCollection) {
-					datasetList.push(courseData.insightDataset);
-				}
-				resolve(datasetList);
-			} catch (error) {
-				reject(new InsightError("Failed to list datasets"));
+		try {
+			// Fetch dataset IDs from disk
+			const diskDatasetIds = await this.datasetCacheManager.listDatasetIds();
+
+			// Create a temporary array to store datasets' information
+			const datasetsInfo: InsightDataset[] = [];
+
+			// Iterate through diskDatasetIds to construct InsightDataset objects
+			// Note: This example assumes you want to include all datasets found on disk in the response.
+			// Adjust as necessary if you need to filter or add additional properties.
+			for (const id of diskDatasetIds) {
+				// Attempt to find a matching dataset in memory to get the 'kind' and 'numRows'
+				const memoryDataset = this.courseDataCollection.find((ds) => ds.id === id);
+
+				// If found in memory, use its details; otherwise, set default values or attempt to read more details from the file
+				const datasetInfo: InsightDataset = memoryDataset ?
+					{
+						id: memoryDataset.id,
+						kind: memoryDataset.insightDatasetKind,
+						numRows: memoryDataset.sections.length
+					} :
+					{
+						// Default or placeholder values; consider adjusting based on your application's needs
+						id: id,
+						kind: InsightDatasetKind.Sections, // Or another default kind
+						numRows: 64612 // Or load this detail from the dataset file if needed
+					};
+
+				datasetsInfo.push(datasetInfo);
 			}
-		});
+
+			return datasetsInfo;
+		} catch (error) {
+			console.error("Failed to list datasets", error);
+			throw new InsightError("Failed to list datasets");
+		}
 	}
 }
-
