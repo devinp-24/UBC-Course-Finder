@@ -4,7 +4,7 @@ export interface Query {
 	// Include TRANSFORMATIONS if your EBNF supports it
 }
 
-export type Filter = LogicComparison | MComparison | SComparison | Negation;
+export type Filter = LogicComparison | MComparison | SComparison | Negation ;
 
 export interface LogicComparison {
 	AND?: Filter[];

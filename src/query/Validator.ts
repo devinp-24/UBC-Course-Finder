@@ -7,7 +7,7 @@ export class Validator {
 		this.validateOptionsClause(query.OPTIONS);
 	}
 
-	private validateWhereClause(filter: Filter): void {
+	public validateWhereClause(filter: Filter): void {
 		if (Object.keys(filter).length === 0) {
 			// An empty WHERE object is valid, matches all entries
 			return;
@@ -55,7 +55,7 @@ export class Validator {
 		}
 	}
 
-	private validateOptionsClause(options: Options): void {
+	public validateOptionsClause(options: Options): void {
 		if (!options.COLUMNS || options.COLUMNS.length === 0) {
 			throw new InsightError("COLUMNS must be a non-empty array");
 		}

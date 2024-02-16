@@ -13,7 +13,7 @@ export class Parser {
 		return {WHERE: whereClause, OPTIONS: optionsClause};
 	}
 
-	private parseWhereClause(where: unknown): Filter {
+	public parseWhereClause(where: unknown): Filter {
 		if (typeof where !== "object" || where === null) {
 			throw new Error("WHERE clause must be an object");
 		}
@@ -42,7 +42,7 @@ export class Parser {
 		}
 	}
 
-	private parseLogicalComparison(operator: string, filters: unknown): LogicComparison {
+	public parseLogicalComparison(operator: string, filters: unknown): LogicComparison {
 		if (!Array.isArray(filters)) {
 			throw new Error(`${operator} value must be an array`);
 		}
@@ -51,7 +51,7 @@ export class Parser {
 		};
 	}
 
-	private parseMComparison(operator: string, comparison: unknown): MComparison {
+	public parseMComparison(operator: string, comparison: unknown): MComparison {
 		if (typeof comparison !== "object" || comparison === null || Object.keys(comparison).length !== 1) {
 			throw new Error(`${operator} comparison requires a single field with a numeric value`);
 		}
@@ -62,7 +62,7 @@ export class Parser {
 		return {[operator]: {[field]: value}};
 	}
 
-	private parseSComparison(comparison: unknown): SComparison {
+	public parseSComparison(comparison: unknown): SComparison {
 		if (typeof comparison !== "object" || comparison === null || Object.keys(comparison).length !== 1) {
 			throw new Error("IS comparison requires a single field with a string value");
 		}
@@ -73,7 +73,7 @@ export class Parser {
 		return {IS: {[field]: value}};
 	}
 
-	private parseOptionsClause(options: unknown): Options {
+	public parseOptionsClause(options: unknown): Options {
 		if (typeof options !== "object" || options === null) {
 			throw new Error("OPTIONS must be an object");
 		}

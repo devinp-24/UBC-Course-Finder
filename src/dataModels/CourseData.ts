@@ -25,10 +25,6 @@ export default class CourseData {
 	}
 
 	public parse(courses: any) {
-		if (!courses || !courses.result || !Array.isArray(courses.result)) {
-			throw new Error("Invalid JSON format");
-		}
-
 		for (let course of courses.result) {
 			let uuid = course.id;
 			let courseID = course.Course;
