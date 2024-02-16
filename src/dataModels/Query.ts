@@ -1,7 +1,7 @@
+// this interface was developed with the help of chatGPT
 export interface Query {
 	WHERE: Filter;
 	OPTIONS: Options;
-	// Include TRANSFORMATIONS if your EBNF supports it
 }
 export type Filter = LogicComparison | MComparison | SComparison | Negation ;
 export interface LogicComparison {
@@ -14,13 +14,13 @@ export interface MComparison {
 	EQ?: MComparator;
 }
 export interface MComparator {
-	[key: string]: number; // e.g., "courses_avg": 90
+	[key: string]: number;
 }
 export interface SComparison {
 	IS: SComparator;
 }
 export interface SComparator {
-	[key: string]: string; // e.g., "courses_dept": "cpsc"
+	[key: string]: string;
 }
 export interface Negation {
 	NOT: Filter;
@@ -28,7 +28,7 @@ export interface Negation {
 
 export interface Options {
 	COLUMNS: string[];
-	ORDER?: string; // Extend as needed for more complex ordering
+	ORDER?: string;
 	[key: string]: any;
 }
 

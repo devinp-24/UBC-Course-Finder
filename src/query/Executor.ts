@@ -27,11 +27,8 @@ export class Executor {
 		return datasetIds.values().next().value;
 	}
 
+	// this helper method was created with the help of chatGPT
 	private extractIdsFromFilter(filter: Filter, datasetIds: Set<string>): void {
-		// if (Object.keys(filter).length === 0) {
-		// 	// Base case: empty filter
-		// 	return;
-		// }
 
 		Object.entries(filter).forEach(([key, value]) => {
 			if (key === "AND" || key === "OR") {
@@ -135,8 +132,8 @@ export class Executor {
 		}
 	}
 
+	// this helper method was created with the help of chatGPT
 	public formatResults(sections: Section[], options: Options): any[] {
-		// Step 1: Select the specified columns
 		const results = sections.map((section) => {
 			const result: any = {};
 			options.COLUMNS.forEach((column) => {
@@ -148,7 +145,6 @@ export class Executor {
 		if (results.length > 5000) {
 			throw new ResultTooLargeError("Oh no");
 		}
-		// Step 2: Sort the results if an ORDER key is specified
 		if (options.ORDER) {
 			const orderKey = options.ORDER;
 			results.sort((a, b) => {

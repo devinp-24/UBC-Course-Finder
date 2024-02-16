@@ -13,6 +13,7 @@ export default class CourseData {
 		this.sections = [];
 		this.insightDataset = {id: id, kind: insightDatasetKind, numRows: this.sections.length};
 
+		// for testing
 		// let counter = 0;
 
 		for (let course of coursesList) {
@@ -29,14 +30,14 @@ export default class CourseData {
 			let uuid = course.id;
 			let courseID = course.Course;
 			let title = course.Title;
-			let instructor = course.Professor; // Corrected property name
+			let instructor = course.Professor;
 			let dept = course.Subject;
 			let year = course.Year;
 			let avg = course.Avg;
 			let pass = course.Pass;
 			let fail = course.Fail;
 			let audit = course.Audit;
-			if (course.Section === "overall") { // Corrected property name
+			if (course.Section === "overall") {
 				year = 1900;
 			}
 			let section = new Section(uuid, courseID, title, instructor, dept, year, avg, pass, fail, audit);
