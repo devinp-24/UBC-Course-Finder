@@ -64,16 +64,16 @@ export default class InsightFacade implements IInsightFacade {
 						coursesFolder.forEach(function (relativePath, file) {
 							info.push(file.async("text"));
 						});
-						Promise.all(info).then((promise: string[]) => {
+						Promise.all(info).then(async (promise: string[]) => {
 							dataset = new CourseData(id, kind, promise);
 							if (dataset.sections.length === 0) {
 								return reject(new InsightError("No valid sections to add"));
 							}
 							this.datasetCollection.push(id);
 							this.courseDataCollection.push(dataset);
-							fse.ensureDirSync("./data");
+							await fse.ensureDir("./data");
 							const filePath = `./data/${id}.json`;
-							fse.writeJsonSync(filePath, {
+							await fse.writeJson(filePath, {
 								id: id,
 								kind: kind,
 								sections: dataset.sections
