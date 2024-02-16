@@ -128,24 +128,30 @@ export default class InsightFacade implements IInsightFacade {
 			const validatedQuery = this.queryValidator.validateQuery(parsedQuery);
 
 			const datasetId = this.queryExecutor.extractDatasetId(parsedQuery);
-			const dataset = this.courseDataCollection[this.datasetCollection.indexOf(datasetId)];
+
+			// Ensure the dataset is loaded in memory
+			let dataset = this.courseDataCollection.find((ds) => ds.id === datasetId);
 			if (!dataset) {
-				throw new InsightError("Dataset not found");
+				// Load the dataset from disk if not found in memory
+				dataset = await this.datasetCacheManager.loadDataset(datasetId);
+				this.datasetCollection.push(datasetId); // Update datasetCollection
+				this.courseDataCollection.push(dataset); // Update courseDataCollection
 			}
 			const filteredResults = this.queryExecutor.applyFilters(dataset, parsedQuery.WHERE);
 
 			const finalResults = this.queryExecutor.formatResults(filteredResults, parsedQuery.OPTIONS);
 
+
 			if (finalResults.length > MAX_RESULTS) {
 				throw new ResultTooLargeError("The query results exceed the allowed limit.");
 			}
-
 			return finalResults;
 		} catch (error) {
 			if (error instanceof ResultTooLargeError) {
-				throw new ResultTooLargeError("ll");
+				throw error;
 			} else {
-				throw new InsightError("l");
+				console.error(`Query execution error: ${error}`);
+				throw new InsightError("An error occurred during the query execution");
 			}
 		}
 	}

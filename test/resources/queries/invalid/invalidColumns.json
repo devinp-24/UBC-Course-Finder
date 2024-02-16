@@ -1,0 +1,16 @@
+{
+	"title": "Invalid Columns",
+	"input": {
+		"WHERE": {
+			"GT": {
+				"sections_seats": 100
+			}
+		},
+		"OPTIONS": {
+			"COLUMNS": "sections_shortname",
+			"ORDER": "sections_seats"
+		}
+	},
+	"errorExpected": true,
+	"expected": "InsightError"
+}

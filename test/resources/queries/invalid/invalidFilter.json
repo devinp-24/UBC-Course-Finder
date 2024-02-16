@@ -1,0 +1,28 @@
+{
+	"title": "Invalid filter",
+	"input": {
+		"WHERE": {
+			"AND": [
+				{
+					"GT": {
+						"sections_seats": 100
+					}
+				},
+				{
+					"IS": {
+						"sections_type": "InvalidType"
+					}
+				}
+			]
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"sections_shortname",
+				"sections_seats"
+			],
+			"ORDER": "sections_seats"
+		}
+	},
+	"errorExpected": true,
+	"expected": "InsightError"
+}
