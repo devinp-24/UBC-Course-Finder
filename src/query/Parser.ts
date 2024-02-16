@@ -89,11 +89,9 @@ export class Parser {
 				throw new Error("Each item in COLUMNS must be a string");
 			}
 		});
-
 		const parsedOptions: Options = {
 			COLUMNS: columns,
 		};
-
 		// If ORDER is specified, validate it
 		if (optionsObj.ORDER !== undefined) {
 			if (typeof optionsObj.ORDER !== "string") {
@@ -101,7 +99,6 @@ export class Parser {
 			}
 			parsedOptions.ORDER = optionsObj.ORDER;
 		}
-
 		return parsedOptions;
 	}
 }

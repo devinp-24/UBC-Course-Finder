@@ -575,7 +575,6 @@ describe("InsightFacade", function () {
 				numRows: 64612}]);
 		});
 	});
-
 	describe("CachingProgress", function () {
 		let newInstance: InsightFacade;
 		before(async function() {
@@ -594,7 +593,6 @@ describe("InsightFacade", function () {
 			expect(result).to.deep.equal("ubc");
 		});
 	});
-
 	describe("PerformQuery", function () {
 		before(async function () {
 			facade = new InsightFacade();
@@ -613,7 +611,7 @@ describe("InsightFacade", function () {
 		});
 
 		after(async function () {
-			await clearDisk();
+			// await clearDisk();
 		});
 
 		describe("valid queries", function() {

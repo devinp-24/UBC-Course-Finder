@@ -46,6 +46,8 @@ export default class Section {
 			return this.fail;
 		} else if (keyID === "audit") {
 			return this.audit;
+		} else {
+			return;
 		}
 	}
 }

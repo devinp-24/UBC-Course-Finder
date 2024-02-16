@@ -1,0 +1,19 @@
+{
+	"title": "Invalid order",
+	"input": {
+		"WHERE": {
+			"GT": {
+				"sections_seats": 100
+			}
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"sections_shortname",
+				"sections_seats"
+			],
+			"ORDER": 123
+		}
+	},
+	"errorExpected": true,
+	"expected": "InsightError"
+}

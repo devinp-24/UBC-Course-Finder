@@ -16,13 +16,14 @@ export default class CourseData {
 		// let counter = 0;
 
 		for (let course of coursesList) {
-			let parsedCourse = JSON.parse(course);
-			this.parse(parsedCourse);
-			// counter++;
-			// console.log(counter);
+			// Assume course is either a JSON string or an already-parsed object
+			let parsedCourse = (typeof course === "string") ? JSON.parse(course) : course;
+			this.parse(parsedCourse); // Now `parse` can always expect an object
 		}
-		// console.log(this.sections);
+
+		this.insightDataset.numRows = this.sections.length;
 	}
+
 
 	public parse(courses: any) {
 		for (let course of courses.result) {
