@@ -9,7 +9,6 @@ export class Parser {
 		// Parse the WHERE and OPTIONS parts of the query
 		const whereClause = this.parseWhereClause((query as any)["WHERE"]);
 		const optionsClause = this.parseOptionsClause((query as any)["OPTIONS"]);
-		// Construct and return the parsed query object
 		return {WHERE: whereClause, OPTIONS: optionsClause};
 	}
 

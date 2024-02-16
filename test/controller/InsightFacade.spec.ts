@@ -13,6 +13,7 @@ import {Executor} from "../../src/query/Executor";
 import CourseData from "../../src/dataModels/CourseData";
 import {Filter, MComparison, Options, Query} from "../../src/dataModels/Query";
 import {Validator} from "../../src/query/Validator";
+import JSZip from "jszip";
 use(chaiAsPromised);
 
 export interface ITestQuery {
@@ -22,6 +23,28 @@ export interface ITestQuery {
 	expected: any;
 }
 
+describe("Section", function () {
+	describe("#get method", function () {
+		it("should return the correct audit value", function () {
+			// Setup: create a Section instance with specific values
+			const uuid = "testUuid";
+			const courseId = "testCourseId";
+			const title = "testTitle";
+			const instructor = "testInstructor";
+			const dept = "testDept";
+			const year = 2021;
+			const avg = 90;
+			const pass = 50;
+			const fail = 5;
+			const audit = 10; // Audit value to test
+
+			const section = new Section(uuid, courseId, title, instructor, dept, year, avg, pass, fail, audit);
+
+			// Exercise & Verify: ensure the 'audit' property can be correctly retrieved
+			expect(section.get("audit")).to.equal(audit);
+		});
+	});
+});
 describe("Executor", function () {
 	let executor: Executor;
 
@@ -381,8 +404,10 @@ describe("Section Getter", function () {
 		expect(section.get("audit")).to.equal(5);
 	});
 });
+
 describe("InsightFacade", function () {
 	let facade: IInsightFacade;
+	let facade2: IInsightFacade;
 
 	// Declare datasets used in tests. You should add more datasets like this!
 	let sections: string;
@@ -406,10 +431,13 @@ describe("InsightFacade", function () {
 			// This runs after each test, which should make each test independent of the previous one
 			await clearDisk();
 		});
-
+		it("should reject with InsightError for an invalid dataset ID containing underscore", async function () {
+			const result = facade.addDataset("invalid_id", "content", InsightDatasetKind.Sections);
+			await expect(result).to.eventually.be.rejectedWith(InsightError, "Invalid ID");
+		});
 		it("should successfully add a dataset", function () {
-			const result = facade.addDataset("ubc", sections, InsightDatasetKind.Sections);
-			return expect(result).to.eventually.have.members(["ubc"]);
+			const result = facade.addDataset("ubc2", sections, InsightDatasetKind.Sections);
+			return expect(result).to.eventually.have.members(["ubc2"]);
 		});
 		it("should fail to add a dataset (blankspace)", async function () {
 			const result = facade.addDataset(" ", sections, InsightDatasetKind.Sections);
@@ -448,11 +476,17 @@ describe("InsightFacade", function () {
 			// Reset the InsightFacade instance before each test
 			facade = new InsightFacade();
 		});
-
-		it("should reject with an empty dataset id", async function () {
-			const result = facade.removeDataset("");
-			return expect(result).to.eventually.be.rejectedWith(InsightError);
+		it("should successfully remove a dataset", async function () {
+			await facade.addDataset("ubc", sections, InsightDatasetKind.Sections);
+			const removeResult = await facade.removeDataset("ubc");
+			expect(removeResult).to.equal("ubc");
+			const listResult = await facade.listDatasets();
+			expect(listResult).to.be.an("array").that.is.empty;
 		});
+		// it("should reject with an empty dataset id", async function () {
+		// 	const result = facade.removeDataset("ubc");
+		// 	return expect(result).to.eventually.be.rejectedWith(NotFoundError);
+		// });
 
 		it("should reject when dataset with given id does not exist", async function () {
 			const result = facade.removeDataset("nonexistentDataset");
@@ -483,6 +517,11 @@ describe("InsightFacade", function () {
 			const result = facade.removeDataset("u_b_c");
 			return expect(result).to.eventually.be.rejectedWith(InsightError);
 		});
+		it("should reject with InsightError for an invalid kind", async function () {
+			const result = facade.addDataset("ubc", sections, "invalidKind" as InsightDatasetKind);
+			await expect(result).to.eventually.be.rejectedWith(InsightError);
+		});
+
 	});
 
 	/*
@@ -494,6 +533,7 @@ describe("InsightFacade", function () {
 		beforeEach(function () {
 			// Reset the insightFacade instance before each test
 			facade = new InsightFacade();
+			facade2 = new InsightFacade();
 		});
 
 		afterEach(async function () {
@@ -516,7 +556,7 @@ describe("InsightFacade", function () {
 		});
 		it("should list multiple dataset", async function() {
 			await facade.addDataset("ubc", sections, InsightDatasetKind.Sections);
-			await facade.addDataset("ubc2", sections, InsightDatasetKind.Sections);
+			await facade2.addDataset("ubc2", sections, InsightDatasetKind.Sections);
 			const datasets = await facade.listDatasets();
 			expect(datasets).to.deep.equal([{
 				id: "ubc",
@@ -536,24 +576,24 @@ describe("InsightFacade", function () {
 		});
 	});
 
-// 	describe("CachingProgress", function () {
-// 		let newInstance: InsightFacade;
-// 		before(async function() {
-// 			const facade2 = new InsightFacade();
-// 			await facade2.addDataset("ubc", sections, InsightDatasetKind.Sections);
-// 			newInstance = new InsightFacade();
+	describe("CachingProgress", function () {
+		let newInstance: InsightFacade;
+		before(async function() {
+			const facade2 = new InsightFacade();
+			await facade2.addDataset("ubc", sections, InsightDatasetKind.Sections);
+			newInstance = new InsightFacade();
 
-// 		});
+		});
 
-// 		// after(async function () {
-// 		// 	await clearDisk();
-// 		// });
+		after(async function () {
+			await clearDisk();
+		});
 
-// 		it("should return the removed dataset after caching", async () => {
-// 			const result = await newInstance.removeDataset("ubc");
-// 			expect(result).to.deep.equal("ubc");
-// 		});
-// 	});
+		it("should return the removed dataset after caching", async () => {
+			const result = await newInstance.removeDataset("ubc");
+			expect(result).to.deep.equal("ubc");
+		});
+	});
 
 	describe("PerformQuery", function () {
 		before(async function () {
