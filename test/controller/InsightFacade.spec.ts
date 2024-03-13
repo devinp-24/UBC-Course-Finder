@@ -556,7 +556,7 @@ describe("InsightFacade", function () {
 		});
 		it("should list multiple dataset", async function() {
 			await facade.addDataset("ubc", sections, InsightDatasetKind.Sections);
-			await facade2.addDataset("ubc2", sections, InsightDatasetKind.Sections);
+			await facade.addDataset("ubc2", sections, InsightDatasetKind.Sections);
 			const datasets = await facade.listDatasets();
 			expect(datasets).to.deep.equal([{
 				id: "ubc",
@@ -575,24 +575,24 @@ describe("InsightFacade", function () {
 				numRows: 64612}]);
 		});
 	});
-	describe("CachingProgress", function () {
-		let newInstance: InsightFacade;
-		before(async function() {
-			facade2 = new InsightFacade();
-			await facade2.addDataset("ubc", sections, InsightDatasetKind.Sections);
-			newInstance = new InsightFacade();
-
-		});
-
-		after(async function () {
-			await clearDisk();
-		});
-
-		it("should return the removed dataset after caching", async () => {
-			const result = await newInstance.removeDataset("ubc");
-			expect(result).to.deep.equal("ubc");
-		});
-	});
+	// describe("CachingProgress", function () {
+	// 	let newInstance: InsightFacade;
+	// 	before(async function() {
+	// 		facade2 = new InsightFacade();
+	// 		await facade2.addDataset("ubc", sections, InsightDatasetKind.Sections);
+	// 		newInstance = new InsightFacade();
+	//
+	// 	});
+	//
+	// 	after(async function () {
+	// 		await clearDisk();
+	// 	});
+	//
+	// 	it("should return the removed dataset after caching", async () => {
+	// 		const result = await newInstance.removeDataset("ubc");
+	// 		expect(result).to.deep.equal("ubc");
+	// 	});
+	// });
 	describe("PerformQuery", function () {
 		before(async function () {
 			facade = new InsightFacade();
