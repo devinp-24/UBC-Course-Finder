@@ -14,6 +14,7 @@ import Section from "../dataModels/Section";
 import {InsightError, InsightResult, ResultTooLargeError} from "../controller/IInsightFacade";
 import Room from "../dataModels/Room";
 import RoomData from "../dataModels/RoomData";
+import Decimal from "decimal.js";
 
 export class Executor {
 	public extractDatasetId(query: Query): string {
@@ -286,19 +287,26 @@ export class Executor {
 	}
 
 	private getAvg(groupRows: Array<Section | Room>, targetField: string): number {
-		const sum = groupRows.reduce((total, row) => {
+		let total = new Decimal(0);
+		groupRows.forEach((row) => {
 			const value = row.get(targetField.split("_")[1]);
-			return typeof value === "number" ? total + value : total;
-		}, 0);
-		return Number((sum / groupRows.length).toFixed(2));
+			if (typeof value === "number") {
+				total = total.plus(value);
+			}
+		});
+		const avg = total.div(groupRows.length);
+		return Number(avg.toFixed(2));
 	}
 
 	private getSum(groupRows: Array<Section | Room>, targetField: string): number {
-		const sum = groupRows.reduce((total, row) => {
+		let total = new Decimal(0);
+		groupRows.forEach((row) => {
 			const value = row.get(targetField.split("_")[1]);
-			return typeof value === "number" ? total + value : total;
-		}, 0);
-		return Number(sum.toFixed(2));
+			if (typeof value === "number") {
+				total = total.plus(value);
+			}
+		});
+		return Number(total.toFixed(2));
 	}
 
 	private getCount(groupRows: Array<Section | Room>, targetField: string): number {
