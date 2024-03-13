@@ -295,7 +295,7 @@ export class Executor {
 			}
 		});
 		const avg = total.div(groupRows.length);
-		return Number(avg.toFixed(2));
+		return Number((avg.plus(Number.EPSILON)).toFixed(2));
 	}
 
 	private getSum(groupRows: Array<Section | Room>, targetField: string): number {
@@ -303,10 +303,10 @@ export class Executor {
 		groupRows.forEach((row) => {
 			const value = row.get(targetField.split("_")[1]);
 			if (typeof value === "number") {
-				total = total.plus(value);
+				total = total.plus(new Decimal(value));
 			}
 		});
-		return Number(total.toFixed(2));
+		return Number((total.plus(Number.EPSILON)).toFixed(2));
 	}
 
 	private getCount(groupRows: Array<Section | Room>, targetField: string): number {
