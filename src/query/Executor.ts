@@ -65,7 +65,6 @@ export class Executor {
 	}
 
 	public applyFilters(courseData: CourseData | RoomData, filter: Filter): Section[] | Room[] {
-		console.log("-------------------EVALUATE FILTER --------------------------------");
 
 		if (Object.keys(filter).length === 0) {
 			if (courseData instanceof CourseData) {
@@ -256,8 +255,6 @@ export class Executor {
 	}
 
 	private performApplyOperation( groupRows: Array<Section | Room>, applyToken: string, targetField: string): number {
-		console.log("------------------------------------APPLY OPERATIONS--------------------------------------");
-		console.log(applyToken);
 		if (targetField === "AVG") {
 			return this.getAvg(groupRows, applyToken);
 		} else if (targetField === "MAX") {
@@ -289,8 +286,6 @@ export class Executor {
 	}
 
 	private getAvg(groupRows: Array<Section | Room>, targetField: string): number {
-		console.log("------------------------------------AVG--------------------------------------");
-		console.log(targetField);
 		const sum = groupRows.reduce((total, row) => {
 			const value = row.get(targetField.split("_")[1]);
 			return typeof value === "number" ? total + value : total;
@@ -301,9 +296,6 @@ export class Executor {
 	private getSum(groupRows: Array<Section | Room>, targetField: string): number {
 		const sum = groupRows.reduce((total, row) => {
 			const value = row.get(targetField.split("_")[1]);
-			console.log("-----------------------------------SUM----------------------------------------------");
-			console.log(targetField);
-			console.log("------------------------------------SUM---------------------------------------------");
 			return typeof value === "number" ? total + value : total;
 		}, 0);
 		return Number(sum.toFixed(2));

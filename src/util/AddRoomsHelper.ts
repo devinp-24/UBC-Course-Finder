@@ -40,7 +40,6 @@ export class AddRoomsHelper {
 
 		idCollection.push(id);
 		dataCollection.push(roomData);
-		console.log(dataCollection);
 
 		return idCollection;
 	}
