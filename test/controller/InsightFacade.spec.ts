@@ -411,10 +411,12 @@ describe("InsightFacade", function () {
 
 	// Declare datasets used in tests. You should add more datasets like this!
 	let sections: string;
+	let rooms: string;
 
 	before(async function () {
 		// This block runs once and loads the datasets.
 		sections = await getContentFromArchives("pair.zip");
+		rooms = await getContentFromArchives("campus.zip");
 		// Just in case there is anything hanging around from a previous run of the test suite
 	});
 
@@ -436,7 +438,7 @@ describe("InsightFacade", function () {
 			await expect(result).to.eventually.be.rejectedWith(InsightError, "Invalid ID");
 		});
 		it("should successfully add a dataset", function () {
-			const result = facade.addDataset("ubc2", sections, InsightDatasetKind.Sections);
+			const result = facade.addDataset("ubc2", rooms, InsightDatasetKind.Rooms);
 			return expect(result).to.eventually.have.members(["ubc2"]);
 		});
 		it("should fail to add a dataset (blankspace)", async function () {
