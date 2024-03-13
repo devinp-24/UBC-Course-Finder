@@ -11,7 +11,6 @@ import {Parser} from "../query/Parser";
 import {Validator} from "../query/Validator";
 import {Executor} from "../query/Executor";
 import * as fse from "fs-extra";
-import {DatasetCacheManager} from "../util/DatasetCacheManager";
 import {AddRoomsHelper} from "../util/AddRoomsHelper";
 import {AddSectionsHelper} from "../util/AddSectionsHelper";
 import {Order} from "../dataModels/Query";
@@ -27,7 +26,6 @@ export default class InsightFacade implements IInsightFacade {
 	private queryParser: Parser;
 	private queryValidator: Validator;
 	private queryExecutor: Executor;
-	private datasetCacheManager: DatasetCacheManager;
 	private adderRoom: AddRoomsHelper;
 	private adderSections: AddSectionsHelper;
 
@@ -36,7 +34,6 @@ export default class InsightFacade implements IInsightFacade {
 		this.queryParser = new Parser();
 		this.queryValidator = new Validator();
 		this.queryExecutor = new Executor();
-		this.datasetCacheManager = new DatasetCacheManager();
 		this.adderRoom = new AddRoomsHelper();
 		this.adderSections = new AddSectionsHelper();
 	}
@@ -95,14 +92,14 @@ export default class InsightFacade implements IInsightFacade {
 			// Use QueryParser to parse the query
 			const parsedQuery = this.queryParser.parseQuery(query);
 			// console.log("-----------------------------PARSING START-----------------------------------------");
-			console.log(parsedQuery);
+			// console.log(parsedQuery);
 			// console.log("-----------------------------PARSING DONE-----------------------------------------");
 			const validatedQuery = this.queryValidator.validateQuery(parsedQuery);
 			// console.log("-----------------------------VALIDATOR DONE-----------------------------------------");
 			// Step 2: Retrieve the dataset referenced in the query
 			const datasetId = this.queryExecutor.extractDatasetId(parsedQuery);
 			// console.log("-----------------------------EXTRACT ID-----------------------------------------");
-			console.log(datasetId);
+			// console.log(datasetId);
 			// console.log("-----------------------------EXTRACT ID DONE-----------------------------------------");
 			const dataset = this.courseDataCollection[this.datasetCollection.indexOf(datasetId)];
 			if (!dataset) {
