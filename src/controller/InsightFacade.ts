@@ -14,6 +14,7 @@ import * as fse from "fs-extra";
 import {DatasetCacheManager} from "../util/DatasetCacheManager";
 import {AddRoomsHelper} from "../util/AddRoomsHelper";
 import {AddSectionsHelper} from "../util/AddSectionsHelper";
+import {Order} from "../dataModels/Query";
 
 /**
  * This is the main programmatic entry point for the project.
@@ -93,26 +94,49 @@ export default class InsightFacade implements IInsightFacade {
 		try {
 			// Use QueryParser to parse the query
 			const parsedQuery = this.queryParser.parseQuery(query);
+			// console.log("-----------------------------PARSING START-----------------------------------------");
+			console.log(parsedQuery);
+			// console.log("-----------------------------PARSING DONE-----------------------------------------");
 			const validatedQuery = this.queryValidator.validateQuery(parsedQuery);
-
+			// console.log("-----------------------------VALIDATOR DONE-----------------------------------------");
 			// Step 2: Retrieve the dataset referenced in the query
 			const datasetId = this.queryExecutor.extractDatasetId(parsedQuery);
+			// console.log("-----------------------------EXTRACT ID-----------------------------------------");
+			console.log(datasetId);
+			// console.log("-----------------------------EXTRACT ID DONE-----------------------------------------");
 			const dataset = this.courseDataCollection[this.datasetCollection.indexOf(datasetId)];
 			if (!dataset) {
 				throw new InsightError("Dataset not found");
 			}
+			// console.log("-----------------------------FOUND DATASET-----------------------------------------");
 
 			// Step 3: Apply filters defined in the WHERE clause
-			const filteredResults = this.queryExecutor.applyFilters(dataset, parsedQuery.WHERE);
-
+			let filteredResults = this.queryExecutor.applyFilters(dataset, parsedQuery.WHERE);
+			// console.log(filteredResults);
+			// console.log("-----------------------------APPLIED FILTER START----------------------------------------");
+			// console.log("-----------------------------APPLIED FILTER DONE----------------------------------------");
 			// Step 4: Apply sorting and column selection based on OPTIONS
-			const finalResults = this.queryExecutor.formatResults(filteredResults, parsedQuery.OPTIONS);
-			// console.log(finalResults.length);
+			if (parsedQuery.TRANSFORMATION) {
+				// console.log("-----------------------------TRANSFORMATION IS THERE----------------------------------");
+				filteredResults = this.queryExecutor.executeGroupAndApply(filteredResults, parsedQuery.TRANSFORMATION);
+				// console.log("-----------------------------GROUP AND APPLY STARTS------------------------------------");
+
+			}
+			// console.log("-----------------------------START OF FORMATTING------------------------------------");
+			let finalResults = this.queryExecutor.formatResults(filteredResults, parsedQuery.OPTIONS);
 			// Step 5: Check for result size constraints
+			if (parsedQuery.OPTIONS.ORDER) {
+				const order = parsedQuery.OPTIONS.ORDER;
+				// If ORDER is a string, convert it to an Order object with default direction 'UP'
+				const orderObject: Order = typeof order === "string" ? {dir: "UP", keys: [order]} : order;
+				finalResults = this.queryExecutor.sortResults(finalResults, orderObject);
+			}
 			if (finalResults.length > MAX_RESULTS) {
 				throw new ResultTooLargeError("The query results exceed the allowed limit.");
 			}
-
+			// console.log("------------------------------FINAL RESULT STARTS------------------------");
+			// console.log(finalResults);
+			// console.log("------------------------------FINAL RESULT DONE------------------------");
 			return finalResults;
 		} catch (error) {
 			if (error instanceof ResultTooLargeError) {

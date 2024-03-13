@@ -1,16 +1,26 @@
-import {Query, Filter, LogicComparison, MComparison, SComparison, Options, Negation} from "../dataModels/Query";
+import {
+	Query,
+	Filter,
+	LogicComparison,
+	MComparison,
+	SComparison,
+	Options,
+	Negation,
+	Order,
+	Transformations, ApplyRule
+} from "../dataModels/Query";
 import CourseData from "../dataModels/CourseData";
 import Section from "../dataModels/Section";
-import {ResultTooLargeError} from "../controller/IInsightFacade";
+import {InsightError, InsightResult, ResultTooLargeError} from "../controller/IInsightFacade";
+import Room from "../dataModels/Room";
+import RoomData from "../dataModels/RoomData";
 
 export class Executor {
 	public extractDatasetId(query: Query): string {
 		// Initialize an empty set to collect unique dataset IDs
 		let datasetIds = new Set<string>();
-
 		// Extract dataset IDs from the WHERE clause
 		this.extractIdsFromFilter(query.WHERE, datasetIds);
-
 		// Extract dataset IDs from the OPTIONS clause
 		query.OPTIONS.COLUMNS.forEach((column) => {
 			const datasetId = this.extractIdFromKey(column);
@@ -54,15 +64,27 @@ export class Executor {
 		return null;
 	}
 
-	public applyFilters(courseData: CourseData, filter: Filter): Section[] {
+	public applyFilters(courseData: CourseData | RoomData, filter: Filter): Section[] | Room[] {
+		console.log("-------------------EVALUATE FILTER --------------------------------");
+
 		if (Object.keys(filter).length === 0) {
+			if (courseData instanceof CourseData) {
+				return courseData.sections;
+			} else {
+				return courseData.rooms;
+			}
 			// If the filter is empty, return all sections
-			return courseData.sections;
 		}
 
-		return courseData.sections.filter((section) => {
-			return this.evaluateFilter(section, filter);
-		});
+		if (courseData instanceof CourseData) {
+			return courseData.sections.filter((section) => {
+				return this.evaluateFilter(section, filter);
+			});
+		} else {
+			return courseData.rooms.filter((section) => {
+				return this.evaluateFilter(section, filter);
+			});
+		}
 	}
 
 	private isLogicComparison(filter: Filter): filter is LogicComparison {
@@ -81,7 +103,7 @@ export class Executor {
 		return "NOT" in filter;
 	}
 
-	private evaluateFilter(section: Section, filter: Filter): boolean {
+	private evaluateFilter(section: Section | Room, filter: Filter): boolean {
 		if (this.isLogicComparison(filter)) {
 			if (filter.AND) {
 				return filter.AND.every((subFilter) => this.evaluateFilter(section, subFilter));
@@ -120,7 +142,6 @@ export class Executor {
 			if (sectionValue === undefined) {
 				throw new Error("Attempted to compare an undefined value");
 			}
-
 			switch (comparatorKey) {
 				case "LT": return sectionValue < targetValue;
 				case "GT": return sectionValue > targetValue;
@@ -133,32 +154,186 @@ export class Executor {
 	}
 
 	// this helper method was created with the help of chatGPT
-	public formatResults(sections: Section[], options: Options): any[] {
+	public formatResults(sections: Array<Section | Room>, options: Options): any[] {
 		const results = sections.map((section) => {
 			const result: any = {};
 			options.COLUMNS.forEach((column) => {
 				const colParts = column.split("_");
-				result[column] = section.get(colParts[1]);
+				const key = colParts[1];
+				if (colParts.length === 2) {
+					if ((section instanceof Section) || (section instanceof Room)) {
+						result[column] = section.get(key);
+					} else {
+						result[column] = section[column as keyof Section];
+					}
+				} else {
+					// If there's no underscore, it's an applied column, so just directly access the property
+					result[column] = (section as any)[column];
+				}
 			});
 			return result;
 		});
-		if (results.length > 5000) {
-			throw new ResultTooLargeError("Oh no");
-		}
-		if (options.ORDER) {
-			const orderKey = options.ORDER;
-			results.sort((a, b) => {
-				if (a[orderKey] < b[orderKey]) {
-					return -1;
-				} else if (a[orderKey] > b[orderKey]) {
-					return 1;
-				} else {
-					return 0;
-				}
-			});
-		}
 
+
+		// Add sort functionality if there is an ORDER clause
+		if (options.ORDER) {
+			results.sort(this.getSortFunction(options.ORDER));
+		}
 		return results;
 	}
 
+// Helper function to generate a sort function based on the ORDER clause
+	private getSortFunction(order: Order | string): (a: any, b: any) => number {
+		// Handle string ORDER, which is a single key with ascending sort
+		if (typeof order === "string") {
+			return (a, b) => {
+				return a[order] > b[order] ? 1 : a[order] < b[order] ? -1 : 0;
+			};
+		}
+		// Handle Order object, which can have multiple keys and a direction
+		return (a, b) => {
+			for (const key of order.keys) {
+				if (a[key] !== b[key]) {
+					const directionMultiplier = order.dir === "UP" ? 1 : -1;
+					return a[key] > b[key] ? directionMultiplier : -directionMultiplier;
+				}
+			}
+			return 0;
+		};
+	}
+
+	public executeGroupAndApply(rows: Section[] | Room[], transformations: Transformations): any[] {
+		// console.log("-----------------------------INSIDE GROUP AND APPLY-------------------------------------");
+		const groups = this.groupBy(rows, transformations.GROUP);
+		// console.log("-----------------------------GROUPBY DONE --------------------------------------");
+		return this.applyTransformations(groups, transformations.APPLY, transformations.GROUP);
+	}
+
+	// this helper method was created with the help of chatGPT
+	private groupBy(rows: Array<Section | Room>, groupKeys: string[]): Map<string, Array<Section | Room>> {
+		const groups = new Map<string, Array<Section | Room>>();
+		rows.forEach((row) => {
+			const groupKey = groupKeys.map((key) => {
+				const value = row.get(key.split("_")[1]);
+				if (value === undefined) {
+					throw new InsightError(`Value for key ${key} is undefined`);
+				}
+				return typeof value === "number" ? value.toString() : value;
+			}).join("||");
+
+			const group = groups.get(groupKey) || [];
+			group.push(row);
+			groups.set(groupKey, group);
+		});
+		return groups;
+	}
+
+	private applyTransformations(groups: Map<string, Array<Section | Room>>
+		, applyRules: ApplyRule[], groupKeys: string[]): any[] {
+		// console.log("-----------------------------TRANSFORMATION STARTS--------------------------------------");
+		const transformedResults: any[] = [];
+		// Iterate through each group to apply the transformations
+		groups.forEach((groupRows, groupKey) => {
+			// Initialize an object to accumulate results for this group
+			const result: any = {};
+			// Handle APPLY rules, performing aggregation operations on the groupRows
+			applyRules.forEach((rule) => {
+				const applyKey = Object.keys(rule)[0];
+				const applyOperation = rule[applyKey];
+				const operationType = Object.keys(applyOperation)[0];
+				const fieldToOperateOn = applyOperation[operationType];
+				result[applyKey] = this.performApplyOperation(groupRows, fieldToOperateOn, operationType);
+			});
+			// Split the concatenated groupKey to get individual group values
+			// Add the group values to the result object using the keys from groupKeys
+			const groupValues = groupKey.split("||");
+			groupKeys.forEach((key, index) => {
+				result[key] = groupValues[index];
+			});
+			transformedResults.push(result);
+		});
+		return transformedResults;
+	}
+
+	private performApplyOperation( groupRows: Array<Section | Room>, applyToken: string, targetField: string): number {
+		console.log("------------------------------------APPLY OPERATIONS--------------------------------------");
+		console.log(applyToken);
+		if (targetField === "AVG") {
+			return this.getAvg(groupRows, applyToken);
+		} else if (targetField === "MAX") {
+			return this.getMax(groupRows, applyToken);
+		} else if (targetField === "MIN") {
+			return this.getMin(groupRows, applyToken);
+		} else if (targetField === "SUM") {
+			return this.getSum(groupRows, applyToken);
+		} else if (targetField === "COUNT") {
+			return this.getCount(groupRows, applyToken);
+		} else {
+			throw new InsightError("Invalid");
+		}
+	}
+
+	private getMax(groupRows: Array<Section | Room>, targetField: string): number {
+		return groupRows.reduce((max, row) => {
+			const value = row.get(targetField.split("_")[1]);
+			return typeof value === "number" && value > max ? value : max;
+		}, Number.NEGATIVE_INFINITY);
+	}
+
+
+	private getMin(groupRows: Array<Section | Room>, targetField: string): number {
+		return groupRows.reduce((min, row) => {
+			const value = row.get(targetField.split("_")[1]);
+			return typeof value === "number" && value < min ? value : min;
+		}, Number.POSITIVE_INFINITY);
+	}
+
+	private getAvg(groupRows: Array<Section | Room>, targetField: string): number {
+		console.log("------------------------------------AVG--------------------------------------");
+		console.log(targetField);
+		const sum = groupRows.reduce((total, row) => {
+			const value = row.get(targetField.split("_")[1]);
+			return typeof value === "number" ? total + value : total;
+		}, 0);
+		return Number((sum / groupRows.length).toFixed(2));
+	}
+
+	private getSum(groupRows: Array<Section | Room>, targetField: string): number {
+		const sum = groupRows.reduce((total, row) => {
+			const value = row.get(targetField.split("_")[1]);
+			console.log("-----------------------------------SUM----------------------------------------------");
+			console.log(targetField);
+			console.log("------------------------------------SUM---------------------------------------------");
+			return typeof value === "number" ? total + value : total;
+		}, 0);
+		return Number(sum.toFixed(2));
+	}
+
+	private getCount(groupRows: Array<Section | Room>, targetField: string): number {
+		const uniqueValues = new Set();
+		groupRows.forEach((row) => {
+			const value = row.get(targetField.split("_")[1]);
+			if (value !== undefined) {
+				uniqueValues.add(value);
+			}
+		});
+		return uniqueValues.size;
+	}
+
+	public sortResults(results: any[], order: Order): any[] {
+		const directionMultiplier = order.dir === "UP" ? 1 : -1;
+
+		// Sort results by the specified keys
+		return results.sort((a, b) => {
+			for (const key of order.keys) {
+				if (a[key] < b[key]) {
+					return -1 * directionMultiplier;
+				} else if (a[key] > b[key]) {
+					return 1 * directionMultiplier;
+				}
+				// if a[key] === b[key], continue to the next key
+			}
+			return 0; // If all keys are equal
+		});
+	}
 }
