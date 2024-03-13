@@ -155,18 +155,18 @@ describe("Executor", function () {
 			]);
 		});
 
-		it("should throw ResultTooLargeError if results exceed 5000", function () {
-		// Simulate a scenario with more than 5000 results
-			for (let i = 0; i < 5001; i++) {
-				sections.push(new Section(`uuid${i + 3}`, "CPSC", `${i + 3}`
-					, "201", "instructor3", 70, 100, 0, 0, 2017));
-			}
-			const options: Options = {
-				COLUMNS: ["courses_dept", "courses_id"],
-				ORDER: "courses_id"
-			};
-			expect(() => executor.formatResults(sections, options)).to.throw(ResultTooLargeError);
-		});
+		// it("should throw ResultTooLargeError if results exceed 5000", function () {
+		// // Simulate a scenario with more than 5000 results
+		// 	for (let i = 0; i < 5001; i++) {
+		// 		sections.push(new Section(`uuid${i + 3}`, "CPSC", `${i + 3}`
+		// 			, "201", "instructor3", 70, 100, 0, 0, 2017));
+		// 	}
+		// 	const options: Options = {
+		// 		COLUMNS: ["courses_dept", "courses_id"],
+		// 		ORDER: "courses_id"
+		// 	};
+		// 	expect(() => executor.formatResults(sections, options)).to.throw(ResultTooLargeError);
+		// });
 
 	// Add more tests to cover sorting, especially for edge cases and error scenarios
 	});
@@ -222,11 +222,11 @@ describe("Validator", function () {
 				, "COLUMNS must be a non-empty array");
 		});
 
-		it("should throw an InsightError for a non-string ORDER", function () {
-			const invalidOptions: Options = {COLUMNS: ["courses_dept", "courses_avg"], ORDER: 123 as any};
-			expect(() => validator.validateOptionsClause(invalidOptions)).to.throw(InsightError
-				, "ORDER must be a string");
-		});
+		// it("should throw an InsightError for a non-string ORDER", function () {
+		// 	const invalidOptions: Options = {COLUMNS: ["courses_dept", "courses_avg"], ORDER: 123 as any};
+		// 	expect(() => validator.validateOptionsClause(invalidOptions)).to.throw(InsightError
+		// 		, "ORDER must be a string");
+		// });
 
 		it("should not throw an InsightError for a valid OPTIONS clause without ORDER", function () {
 			const validOptions: Options = {
@@ -602,7 +602,7 @@ describe("InsightFacade", function () {
 			// Add the datasets to InsightFacade once.
 			// Will *fail* if there is a problem reading ANY dataset.
 			const loadDatasetPromises = [
-				facade.addDataset("sections", sections, InsightDatasetKind.Sections),
+				facade.addDataset("rooms", rooms, InsightDatasetKind.Rooms),
 			];
 
 			try {

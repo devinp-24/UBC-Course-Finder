@@ -1,15 +1,26 @@
 import {InsightError} from "../controller/IInsightFacade";
-import {Query, Filter, LogicComparison, MComparison, SComparison, Options} from "../dataModels/Query";
+import {
+	Query,
+	Filter,
+	LogicComparison,
+	MComparison,
+	SComparison,
+	Options,
+	Order,
+	Transformations, ApplyRule
+} from "../dataModels/Query";
 
 export class Validator {
 	public validateQuery(query: Query): void {
 		this.validateWhereClause(query.WHERE);
 		this.validateOptionsClause(query.OPTIONS);
+		if (query.TRANSFORMATION) {
+			this.validateTransformationsClause(query.TRANSFORMATION);
+		}
 	}
 
 	public validateWhereClause(filter: Filter): void {
 		if (Object.keys(filter).length === 0) {
-			// An empty WHERE object is valid, matches all entries
 			return;
 		}
 
@@ -59,13 +70,81 @@ export class Validator {
 		if (!options.COLUMNS || options.COLUMNS.length === 0) {
 			throw new InsightError("COLUMNS must be a non-empty array");
 		}
+
 		options.COLUMNS.forEach((column) => {
 			if (typeof column !== "string") {
 				throw new InsightError("Each item in COLUMNS must be a string");
 			}
 		});
-		if (options.ORDER && typeof options.ORDER !== "string") {
-			throw new InsightError("ORDER must be a string");
+
+		// if (options.ORDER && typeof options.ORDER !== "string") {
+		// 	console.log("--------------------------INSIDE VALIDATION--------------");
+		// 	throw new InsightError("ORDER must be a string");
+		// }
+		if (options.ORDER) {
+			const order = options.ORDER;
+			if (typeof order === "string") {
+				this.validateOrderString(order, options.COLUMNS);
+			} else {
+				this.validateOrderObject(order, options.COLUMNS);
+			}
+		}
+	}
+
+	private validateOrderString(order: string, columns: string[]): void {
+		if (!columns.includes(order)) {
+			throw new InsightError("ORDER must be one of the COLUMNS when it's a string");
+		}
+	}
+
+	private validateOrderObject(order: Order, columns: string[]): void {
+		if (order.dir !== "UP" && order.dir !== "DOWN") {
+			throw new InsightError("ORDER direction must be UP or DOWN");
+		}
+		if (!Array.isArray(order.keys) || order.keys.length === 0) {
+			throw new InsightError("ORDER keys must be a non-empty array");
+		}
+		order.keys.forEach((key) => {
+			if (typeof key !== "string" || !columns.includes(key)) {
+				throw new InsightError("Each ORDER key must be a string and included in COLUMNS");
+			}
+		});
+	}
+
+	private validateTransformationsClause(transformations: Transformations): void {
+		this.validateGroupArray(transformations.GROUP);
+		this.validateApplyArray(transformations.APPLY);
+	}
+
+	private validateGroupArray(group: string[]): void {
+		group.forEach((key) => {
+			if (typeof key !== "string") {
+				throw new InsightError("Each GROUP key must be a string");
+			}
+		});
+	}
+
+	private validateApplyArray(apply: ApplyRule[]): void {
+		const seenApplyKeys = new Set<string>();
+		apply.forEach((rule) => {
+			const applyKey = Object.keys(rule)[0];
+			if (seenApplyKeys.has(applyKey)) {
+				throw new InsightError(`Each APPLY key must be unique. Duplicate found: ${applyKey}`);
+			}
+			seenApplyKeys.add(applyKey);
+
+			const applyToken = Object.keys(rule[applyKey])[0];
+			const tokenValue = rule[applyKey][applyToken];
+			this.validateApplyToken(applyToken, tokenValue);
+		});
+	}
+
+	private validateApplyToken(applyToken: string, tokenValue: string): void {
+		if (!["MAX", "MIN", "AVG", "COUNT", "SUM"].includes(applyToken)) {
+			throw new InsightError(`Invalid APPLY token: ${applyToken}`);
+		}
+		if (typeof tokenValue !== "string") {
+			throw new InsightError(`Value for ${applyToken} must be a string`);
 		}
 	}
 }

@@ -1,15 +1,40 @@
 import {InsightError} from "../controller/IInsightFacade";
-import {Query, Filter, LogicComparison, MComparison, SComparison, Options} from "../dataModels/Query";
+import {
+	Query,
+	Filter,
+	LogicComparison,
+	MComparison,
+	SComparison,
+	Options,
+	ApplyRule,
+	Transformations, Order
+} from "../dataModels/Query";
 export class Parser {
+
 	public parseQuery(query: unknown): Query {
-		// Initial validation of the query object
 		if (typeof query !== "object" || query === null) {
 			throw new InsightError("Query must be an object");
 		}
-		// Parse the WHERE and OPTIONS parts of the query
+
+		// Extract WHERE, OPTIONS, and optionally TRANSFORMATIONS from the query
 		const whereClause = this.parseWhereClause((query as any)["WHERE"]);
 		const optionsClause = this.parseOptionsClause((query as any)["OPTIONS"]);
-		return {WHERE: whereClause, OPTIONS: optionsClause};
+		const transformationsClause = (query as any)["TRANSFORMATIONS"]
+			? this.parseTransformationsClause((query as any)["TRANSFORMATIONS"])
+			: undefined; // incase there is no transformation
+
+		// Construct and return the query object
+		const parsedQuery: Query = {
+			WHERE: whereClause,
+			OPTIONS: optionsClause,
+		};
+
+		// If TRANSFORMATIONS is present in the query
+		if (transformationsClause) {
+			parsedQuery.TRANSFORMATION = transformationsClause;
+		}
+
+		return parsedQuery;
 	}
 
 	public parseWhereClause(where: unknown): Filter {
@@ -17,7 +42,6 @@ export class Parser {
 			throw new Error("WHERE clause must be an object");
 		}
 
-		// An empty WHERE object matches all entries
 		if (Object.keys(where).length === 0) {
 			return {}; // Represents no filter
 		}
@@ -74,32 +98,116 @@ export class Parser {
 
 	public parseOptionsClause(options: unknown): Options {
 		if (typeof options !== "object" || options === null) {
-			throw new Error("OPTIONS must be an object");
+			throw new InsightError("OPTIONS must be an object");
 		}
 
-		const optionsObj = options as Partial<{COLUMNS: unknown; ORDER: unknown}>;
+		const optionsObj = options as Partial<Options>;
 		if (!Array.isArray(optionsObj.COLUMNS) || optionsObj.COLUMNS.length === 0) {
-			throw new Error("COLUMNS must be a non-empty array");
+			throw new InsightError("COLUMNS must be a non-empty array");
 		}
 
 		// Validate that each item in COLUMNS is a string
 		const columns = optionsObj.COLUMNS;
 		columns.forEach((column) => {
 			if (typeof column !== "string") {
-				throw new Error("Each item in COLUMNS must be a string");
+				throw new InsightError("Each item in COLUMNS must be a string");
 			}
 		});
-		const parsedOptions: Options = {
-			COLUMNS: columns,
-		};
+
+		const parsedOptions: Options = {COLUMNS: columns};
+
 		// If ORDER is specified, validate it
 		if (optionsObj.ORDER !== undefined) {
-			if (typeof optionsObj.ORDER !== "string") {
-				throw new Error("ORDER must be a string");
+			const order = optionsObj.ORDER;
+			if (typeof order === "string") {
+				parsedOptions.ORDER = order;
+			} else if (typeof order === "object" && order !== null) {
+				parsedOptions.ORDER = this.parseOrderClause(order);
+			} else {
+				throw new InsightError("Invalid ORDER format");
 			}
-			parsedOptions.ORDER = optionsObj.ORDER;
 		}
+
 		return parsedOptions;
+	}
+
+	private parseOrderClause(order: unknown): Order | string {
+		// Check if 'order' is a string, which is a simple case, return it directly
+		if (typeof order === "string") {
+			return order;
+		}
+
+		// If 'order' is not a string, we need to ensure it's an object with the correct properties
+		if (typeof order === "object" && order !== null && "dir" in order && "keys" in order) {
+			const dir = (order as any).dir;
+			const keys = (order as any).keys;
+			if (dir !== "UP" && dir !== "DOWN") {
+				throw new InsightError("ORDER direction must be UP or DOWN");
+			}
+			if (!Array.isArray(keys)) {
+				throw new InsightError("ORDER keys must be an array");
+			}
+			keys.forEach((key) => {
+				if (typeof key !== "string") {
+					throw new InsightError("Each ORDER key must be a string");
+				}
+			});
+			return {dir, keys};
+		} else {
+			// If 'order' is neither a string nor a properly structured object, throw an error
+			throw new InsightError("Invalid ORDER format");
+		}
+	}
+
+	public parseTransformationsClause(transformations: unknown): Transformations {
+		if (typeof transformations !== "object" || transformations === null) {
+			throw new InsightError("TRANSFORMATIONS must be an object");
+		}
+
+		const transformationsObj = transformations as Partial<Transformations>;
+		if (!Array.isArray(transformationsObj.GROUP) || transformationsObj.GROUP.length === 0) {
+			throw new InsightError("GROUP must be a non-empty array");
+		}
+
+		// Parse GROUP array
+		const group: string[] = transformationsObj.GROUP;
+		group.forEach((key) => {
+			if (typeof key !== "string") {
+				throw new InsightError("Each key in GROUP must be a string");
+			}
+		});
+
+		// Parse APPLY array
+		const apply: ApplyRule[] = [];
+		if (Array.isArray(transformationsObj.APPLY)) {
+			transformationsObj.APPLY.forEach((rule) => {
+				const applyKey = Object.keys(rule)[0];
+				const applyToken = Object.keys(rule[applyKey])[0];
+				const key = rule[applyKey][applyToken];
+				if (typeof applyKey !== "string" || typeof applyToken !== "string" || typeof key !== "string") {
+					throw new InsightError("Invalid APPLY rule format");
+				}
+				apply.push({[applyKey]: {[applyToken]: key}});
+			});
+		}
+		apply.forEach((rule: ApplyRule) => {
+			const applyKey = Object.keys(rule)[0];
+			const applyToken = Object.keys(rule[applyKey])[0];
+			const tokenValue = rule[applyKey][applyToken];
+
+			if (!["MAX", "MIN", "AVG", "COUNT", "SUM"].includes(applyToken)) {
+				throw new InsightError(`Invalid APPLY token: ${applyToken}`);
+			}
+
+			if (typeof tokenValue !== "string") {
+				throw new InsightError(`Value for ${applyToken} must be a string`);
+			}
+		});
+
+		return {
+			GROUP: group,
+			APPLY: apply
+		};
 	}
 }
 
