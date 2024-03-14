@@ -1,0 +1,66 @@
+{
+	"title": "COUNTWITHEQ",
+	"input": {
+		"WHERE": {
+			"AND": [
+				{
+					"IS": {
+						"rooms_furniture": "*Tables*"
+					}
+				},
+				{
+					"EQ": {
+						"rooms_seats": 30
+					}
+				}
+			]
+		},
+		"OPTIONS": {
+			"COLUMNS": [
+				"rooms_shortname",
+				"maxSeats"
+			],
+			"ORDER": {
+				"dir": "DOWN",
+				"keys": [
+					"maxSeats"
+				]
+			}
+		},
+		"TRANSFORMATIONS": {
+			"GROUP": [
+				"rooms_shortname"
+			],
+			"APPLY": [
+				{
+					"maxSeats": {
+						"COUNT": "rooms_seats"
+					}
+				}
+			]
+		}
+	},
+	"errorExpected": false,
+	"expected": [
+		{
+			"rooms_shortname": "BUCH",
+			"maxSeats": 1
+		},
+		{
+			"rooms_shortname": "HENN",
+			"maxSeats": 1
+		},
+		{
+			"rooms_shortname": "SPPH",
+			"maxSeats": 1
+		},
+		{
+			"rooms_shortname": "UCLL",
+			"maxSeats": 1
+		},
+		{
+			"rooms_shortname": "WOOD",
+			"maxSeats": 1
+		}
+	]
+}

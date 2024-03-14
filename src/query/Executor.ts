@@ -309,8 +309,7 @@ export class Executor {
 				total = total.add(new Decimal(value));
 			}
 		});
-		const sum = total.toNumber();
-		return Number(sum.toFixed(2));
+		return Number(total.toFixed(2));
 	}
 
 	private getCount(groupRows: Array<Section | Room>, targetField: string): number {
