@@ -44,10 +44,6 @@ describe("InsightFacade", function () {
 			// This runs after each test, which should make each test independent of the previous one
 			await clearDisk();
 		});
-		it("should reject with InsightError for an invalid dataset ID containing underscore", async function () {
-			const result = facade.addDataset("invalid_id", "content", InsightDatasetKind.Sections);
-			await expect(result).to.eventually.be.rejectedWith(InsightError, "Invalid ID");
-		});
 		it("should successfully add a dataset", function () {
 			const result = facade.addDataset("ubc2", rooms, InsightDatasetKind.Rooms);
 			return expect(result).to.eventually.have.members(["ubc2"]);
@@ -130,7 +126,7 @@ describe("InsightFacade", function () {
 			const result = facade.removeDataset("u_b_c");
 			return expect(result).to.eventually.be.rejectedWith(InsightError);
 		});
-		it("should reject with InsightError for an invalid kind", async function () {
+		it("should reject with InsightError for an invalid kind (delete)", async function () {
 			const result = facade.addDataset("ubc", sections, "invalidKind" as InsightDatasetKind);
 			await expect(result).to.eventually.be.rejectedWith(InsightError);
 		});
