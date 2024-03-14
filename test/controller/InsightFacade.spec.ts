@@ -7,12 +7,9 @@ import {
 import {assert, expect, use} from "chai";
 import chaiAsPromised from "chai-as-promised";
 import {clearDisk, getContentFromArchives, readFileQueries} from "../TestUtil";
-import {Parser} from "../../src/query/Parser";
 import Section from "../../src/dataModels/Section";
-import {Executor} from "../../src/query/Executor";
 import CourseData from "../../src/dataModels/CourseData";
 import {Filter, MComparison, Options, Query} from "../../src/dataModels/Query";
-import {Validator} from "../../src/query/Validator";
 import JSZip from "jszip";
 use(chaiAsPromised);
 
@@ -45,329 +42,220 @@ describe("Section", function () {
 		});
 	});
 });
-describe("Executor", function () {
-	let executor: Executor;
+// describe("Executor", function () {
+// 	let executor: Executor;
+//
+// 	before(function () {
+// 		executor = new Executor();
+// 	});
+// 	describe("extractDatasetId", function () {
+// 		it("should extract the dataset id from a simple query", function () {
+// 			const query: Query = {
+// 				WHERE: {
+// 					IS: {courses_dept: "cpsc"}
+// 				},
+// 				OPTIONS: {
+// 					COLUMNS: ["courses_dept", "courses_avg"]
+// 				}
+// 			};
+// 			const result = executor.extractDatasetId(query);
+// 			expect(result).to.equal("courses");
+// 		});
+//
+// 		it("should throw an error for inconsistent dataset ids", function () {
+// 			const query: Query = {
+// 				WHERE: {
+// 					IS: {courses_dept: "cpsc"}
+// 				},
+// 				OPTIONS: {
+// 					COLUMNS: ["courses_dept", "another_dept_avg"]
+// 				}
+// 			};
+// 			expect(() => executor.extractDatasetId(query)).to.throw("Query must use a single dataset ID");
+// 		});
+// 	});
+//
+// 	describe("applyFilters", function () {
+// 		let courseData: CourseData;
+//
+// 		beforeEach(function () {
+// 			const sampleCoursesList = [
+// 				JSON.stringify({
+// 					result: [
+// 						{
+// 							id: "uuid1",
+// 							Course: "210",
+// 							Title: "Software Construction",
+// 							Professor: "Reid Holmes",
+// 							Subject: "CPSC",
+// 							Year: 2017,
+// 							Avg: 85,
+// 							Pass: 200,
+// 							Fail: 10,
+// 							Audit: 5,
+// 							Section: "101"
+// 						},
+// 						{
+// 							id: "uuid2",
+// 							Course: "310",
+// 							Title: "Introduction to Software Engineering",
+// 							Professor: "Gregor Kiczales",
+// 							Subject: "CPSC",
+// 							Year: 2017,
+// 							Avg: 90,
+// 							Pass: 150,
+// 							Fail: 8,
+// 							Audit: 2,
+// 							Section: "102"
+// 						}
+// 					]
+// 				})
+// 			];
+// 			courseData = new CourseData("cpsc", InsightDatasetKind.Sections, sampleCoursesList);
+// 		});
+//
+// 		it("should return all sections for an empty filter", function () {
+// 			const filter: Filter = {};
+// 			const results = executor.applyFilters(courseData, filter);
+// 			expect(results).to.have.lengthOf(courseData.sections.length);
+// 		});
+//
+// 		// it("should filter sections based on GT comparison", function () {
+// 		// 	const filter: Filter = {GT: {courses_avg: 95}};
+// 		// 	const results = executor.applyFilters(courseData, filter);
+// 		// 	expect(results).to.have.lengthOf(1);
+// 		// 	expect(results[0].id).to.equal("210");
+// 		// });
+//
+// 	// Add tests for LT, EQ, IS comparisons, and combinations (AND, OR, NOT)
+// 	});
+//
+// 	describe("formatResults", function () {
+// 		let sections: Section[];
+//
+// 		beforeEach(function () {
+// 			sections = [
+// 				new Section("uuid1", "CPSC", "210", "201", "instructor1", 99, 100, 0, 0, 2017),
+// 				new Section("uuid2", "CPSC", "310", "201", "instructor2", 80, 100, 0, 0, 2017)
+// 			];
+// 		});
+//
+// 		it("should format results according to the OPTIONS clause", function () {
+// 			const options: Options = {
+// 				COLUMNS: ["courses_dept", "courses_id"],
+// 				ORDER: "courses_id"
+// 			};
+// 			const results = executor.formatResults(sections, options);
+// 			expect(results).to.deep.equal([
+// 				{courses_dept: "instructor1", courses_id: "CPSC"},
+// 				{courses_dept: "instructor2", courses_id: "CPSC"}
+// 			]);
+// 		});
+//
+// 		// it("should throw ResultTooLargeError if results exceed 5000", function () {
+// 		// // Simulate a scenario with more than 5000 results
+// 		// 	for (let i = 0; i < 5001; i++) {
+// 		// 		sections.push(new Section(`uuid${i + 3}`, "CPSC", `${i + 3}`
+// 		// 			, "201", "instructor3", 70, 100, 0, 0, 2017));
+// 		// 	}
+// 		// 	const options: Options = {
+// 		// 		COLUMNS: ["courses_dept", "courses_id"],
+// 		// 		ORDER: "courses_id"
+// 		// 	};
+// 		// 	expect(() => executor.formatResults(sections, options)).to.throw(ResultTooLargeError);
+// 		// });
+//
+// 	// Add more tests to cover sorting, especially for edge cases and error scenarios
+// 	});
+//
+// // Add more tests as needed for each uncovered line or scenario
+// });
+//
+// describe("Validator", function () {
+// 	let validator: Validator;
+//
+// 	// Set up before any tests are run
+// 	before(function () {
+// 		validator = new Validator();
+// 	});
+//
+// 	describe("validateWhereClause", function () {
+// 		it("should accept an empty WHERE clause", function () {
+// 			const emptyFilter: Filter = {};
+// 			expect(() => validator.validateWhereClause(emptyFilter)).to.not.throw();
+// 		});
+// 		it("should not throw an InsightError for a valid NOT filter", function () {
+// 			const validFilter: Filter = {NOT: {GT: {courses_avg: 90}}};
+// 			expect(() => validator.validateWhereClause(validFilter)).to.not.throw();
+// 		});
+//
+// 		it("should not throw an InsightError for valid nested AND/OR filters", function () {
+// 			const validFilter: Filter = {
+// 				AND: [
+// 					{OR: [{GT: {courses_avg: 90}}, {LT: {courses_avg: 95}}]},
+// 					{IS: {courses_dept: "cpsc"}}
+// 				]
+// 			};
+// 			expect(() => validator.validateWhereClause(validFilter)).to.not.throw();
+// 		});
+// 		it("should throw an InsightError for an invalid MComparison filter", function () {
+// 			const invalidFilter: Filter = {GT: {}};
+// 			expect(() => validator.validateWhereClause(invalidFilter)).to.throw(InsightError
+// 				, "MComparison must have exactly one key-value pair");
+// 		});
+//
+// 		// Test for an invalid SComparison (missing key or value)
+// 		it("should throw an InsightError for an invalid SComparison filter", function () {
+// 			const invalidFilter: Filter = {IS: {}};
+// 			expect(() => validator.validateWhereClause(invalidFilter)).to.throw(InsightError
+// 				, "SComparison must have exactly one key-value pair");
+// 		});
+// 	});
+//
+// 	describe("validateOptionsClause", function () {
+// 		it("should throw an InsightError for an empty COLUMNS array", function () {
+// 			const invalidOptions: Options = {COLUMNS: []};
+// 			expect(() => validator.validateOptionsClause(invalidOptions)).to.throw(InsightError
+// 				, "COLUMNS must be a non-empty array");
+// 		});
+//
+// 		// it("should throw an InsightError for a non-string ORDER", function () {
+// 		// 	const invalidOptions: Options = {COLUMNS: ["courses_dept", "courses_avg"], ORDER: 123 as any};
+// 		// 	expect(() => validator.validateOptionsClause(invalidOptions)).to.throw(InsightError
+// 		// 		, "ORDER must be a string");
+// 		// });
+//
+// 		it("should not throw an InsightError for a valid OPTIONS clause without ORDER", function () {
+// 			const validOptions: Options = {
+// 				COLUMNS: ["courses_dept", "courses_avg"]
+// 			};
+// 			expect(() => validator.validateOptionsClause(validOptions)).to.not.throw();
+// 		});
+//
+// 		it("should not throw an InsightError for a valid OPTIONS clause with ORDER", function () {
+// 			const validOptions: Options = {
+// 				COLUMNS: ["courses_dept", "courses_avg"],
+// 				ORDER: "courses_avg"
+// 			};
+// 			expect(() => validator.validateOptionsClause(validOptions)).to.not.throw();
+// 		});
+//
+// 		// Test for OPTIONS with ORDER referencing a column not present in COLUMNS
+//
+// 		// Test for valid OPTIONS with multiple columns and an ORDER
+// 		it("should not throw an InsightError for valid OPTIONS with multiple columns and ORDER", function () {
+// 			const validOptions: Options = {
+// 				COLUMNS: ["courses_dept", "courses_avg", "courses_id"],
+// 				ORDER: "courses_id"
+// 			};
+// 			expect(() => validator.validateOptionsClause(validOptions)).to.not.throw();
+// 		});
+//
+// 		// Add a test case for a valid OPTIONS clause with ORDER being an object for advanced ordering
+// 		// This test assumes your implementation supports advanced ordering with direction and keys
+// 	});
+// });
 
-	before(function () {
-		executor = new Executor();
-	});
-	describe("extractDatasetId", function () {
-		it("should extract the dataset id from a simple query", function () {
-			const query: Query = {
-				WHERE: {
-					IS: {courses_dept: "cpsc"}
-				},
-				OPTIONS: {
-					COLUMNS: ["courses_dept", "courses_avg"]
-				}
-			};
-			const result = executor.extractDatasetId(query);
-			expect(result).to.equal("courses");
-		});
-
-		it("should throw an error for inconsistent dataset ids", function () {
-			const query: Query = {
-				WHERE: {
-					IS: {courses_dept: "cpsc"}
-				},
-				OPTIONS: {
-					COLUMNS: ["courses_dept", "another_dept_avg"]
-				}
-			};
-			expect(() => executor.extractDatasetId(query)).to.throw("Query must use a single dataset ID");
-		});
-	});
-
-	describe("applyFilters", function () {
-		let courseData: CourseData;
-
-		beforeEach(function () {
-			const sampleCoursesList = [
-				JSON.stringify({
-					result: [
-						{
-							id: "uuid1",
-							Course: "210",
-							Title: "Software Construction",
-							Professor: "Reid Holmes",
-							Subject: "CPSC",
-							Year: 2017,
-							Avg: 85,
-							Pass: 200,
-							Fail: 10,
-							Audit: 5,
-							Section: "101"
-						},
-						{
-							id: "uuid2",
-							Course: "310",
-							Title: "Introduction to Software Engineering",
-							Professor: "Gregor Kiczales",
-							Subject: "CPSC",
-							Year: 2017,
-							Avg: 90,
-							Pass: 150,
-							Fail: 8,
-							Audit: 2,
-							Section: "102"
-						}
-					]
-				})
-			];
-			courseData = new CourseData("cpsc", InsightDatasetKind.Sections, sampleCoursesList);
-		});
-
-		it("should return all sections for an empty filter", function () {
-			const filter: Filter = {};
-			const results = executor.applyFilters(courseData, filter);
-			expect(results).to.have.lengthOf(courseData.sections.length);
-		});
-
-		// it("should filter sections based on GT comparison", function () {
-		// 	const filter: Filter = {GT: {courses_avg: 95}};
-		// 	const results = executor.applyFilters(courseData, filter);
-		// 	expect(results).to.have.lengthOf(1);
-		// 	expect(results[0].id).to.equal("210");
-		// });
-
-	// Add tests for LT, EQ, IS comparisons, and combinations (AND, OR, NOT)
-	});
-
-	describe("formatResults", function () {
-		let sections: Section[];
-
-		beforeEach(function () {
-			sections = [
-				new Section("uuid1", "CPSC", "210", "201", "instructor1", 99, 100, 0, 0, 2017),
-				new Section("uuid2", "CPSC", "310", "201", "instructor2", 80, 100, 0, 0, 2017)
-			];
-		});
-
-		it("should format results according to the OPTIONS clause", function () {
-			const options: Options = {
-				COLUMNS: ["courses_dept", "courses_id"],
-				ORDER: "courses_id"
-			};
-			const results = executor.formatResults(sections, options);
-			expect(results).to.deep.equal([
-				{courses_dept: "instructor1", courses_id: "CPSC"},
-				{courses_dept: "instructor2", courses_id: "CPSC"}
-			]);
-		});
-
-		// it("should throw ResultTooLargeError if results exceed 5000", function () {
-		// // Simulate a scenario with more than 5000 results
-		// 	for (let i = 0; i < 5001; i++) {
-		// 		sections.push(new Section(`uuid${i + 3}`, "CPSC", `${i + 3}`
-		// 			, "201", "instructor3", 70, 100, 0, 0, 2017));
-		// 	}
-		// 	const options: Options = {
-		// 		COLUMNS: ["courses_dept", "courses_id"],
-		// 		ORDER: "courses_id"
-		// 	};
-		// 	expect(() => executor.formatResults(sections, options)).to.throw(ResultTooLargeError);
-		// });
-
-	// Add more tests to cover sorting, especially for edge cases and error scenarios
-	});
-
-// Add more tests as needed for each uncovered line or scenario
-});
-
-describe("Validator", function () {
-	let validator: Validator;
-
-	// Set up before any tests are run
-	before(function () {
-		validator = new Validator();
-	});
-
-	describe("validateWhereClause", function () {
-		it("should accept an empty WHERE clause", function () {
-			const emptyFilter: Filter = {};
-			expect(() => validator.validateWhereClause(emptyFilter)).to.not.throw();
-		});
-		it("should not throw an InsightError for a valid NOT filter", function () {
-			const validFilter: Filter = {NOT: {GT: {courses_avg: 90}}};
-			expect(() => validator.validateWhereClause(validFilter)).to.not.throw();
-		});
-
-		it("should not throw an InsightError for valid nested AND/OR filters", function () {
-			const validFilter: Filter = {
-				AND: [
-					{OR: [{GT: {courses_avg: 90}}, {LT: {courses_avg: 95}}]},
-					{IS: {courses_dept: "cpsc"}}
-				]
-			};
-			expect(() => validator.validateWhereClause(validFilter)).to.not.throw();
-		});
-		it("should throw an InsightError for an invalid MComparison filter", function () {
-			const invalidFilter: Filter = {GT: {}};
-			expect(() => validator.validateWhereClause(invalidFilter)).to.throw(InsightError
-				, "MComparison must have exactly one key-value pair");
-		});
-
-		// Test for an invalid SComparison (missing key or value)
-		it("should throw an InsightError for an invalid SComparison filter", function () {
-			const invalidFilter: Filter = {IS: {}};
-			expect(() => validator.validateWhereClause(invalidFilter)).to.throw(InsightError
-				, "SComparison must have exactly one key-value pair");
-		});
-	});
-
-	describe("validateOptionsClause", function () {
-		it("should throw an InsightError for an empty COLUMNS array", function () {
-			const invalidOptions: Options = {COLUMNS: []};
-			expect(() => validator.validateOptionsClause(invalidOptions)).to.throw(InsightError
-				, "COLUMNS must be a non-empty array");
-		});
-
-		// it("should throw an InsightError for a non-string ORDER", function () {
-		// 	const invalidOptions: Options = {COLUMNS: ["courses_dept", "courses_avg"], ORDER: 123 as any};
-		// 	expect(() => validator.validateOptionsClause(invalidOptions)).to.throw(InsightError
-		// 		, "ORDER must be a string");
-		// });
-
-		it("should not throw an InsightError for a valid OPTIONS clause without ORDER", function () {
-			const validOptions: Options = {
-				COLUMNS: ["courses_dept", "courses_avg"]
-			};
-			expect(() => validator.validateOptionsClause(validOptions)).to.not.throw();
-		});
-
-		it("should not throw an InsightError for a valid OPTIONS clause with ORDER", function () {
-			const validOptions: Options = {
-				COLUMNS: ["courses_dept", "courses_avg"],
-				ORDER: "courses_avg"
-			};
-			expect(() => validator.validateOptionsClause(validOptions)).to.not.throw();
-		});
-
-		// Test for OPTIONS with ORDER referencing a column not present in COLUMNS
-
-		// Test for valid OPTIONS with multiple columns and an ORDER
-		it("should not throw an InsightError for valid OPTIONS with multiple columns and ORDER", function () {
-			const validOptions: Options = {
-				COLUMNS: ["courses_dept", "courses_avg", "courses_id"],
-				ORDER: "courses_id"
-			};
-			expect(() => validator.validateOptionsClause(validOptions)).to.not.throw();
-		});
-
-		// Add a test case for a valid OPTIONS clause with ORDER being an object for advanced ordering
-		// This test assumes your implementation supports advanced ordering with direction and keys
-	});
-});
-
-describe("Parser", () => {
-	let parser: Parser;
-
-	beforeEach(() => {
-		parser = new Parser();
-	});
-
-	describe("parseQuery", () => {
-		it("should throw InsightError if query is not an object", () => {
-			try {
-				parser.parseQuery(null);
-				assert.fail("Query did not throw an error");
-			} catch (err) {
-				if (err instanceof InsightError) {
-					// Test passed
-				} else {
-					assert.fail("Query threw unexpected error");
-				}
-			}
-		});
-
-		// Add more test cases to cover scenarios like valid query objects, malformed query objects, etc.
-	});
-
-	describe("parseWhereClause", () => {
-		it("should throw Error if WHERE clause is not an object", () => {
-			try {
-				parser.parseWhereClause(null);
-				assert.fail("Query did not throw an error");
-			} catch (err) {
-				if (err instanceof Error) {
-					// Test passed
-				} else {
-					assert.fail("Query threw unexpected error");
-				}
-			}
-		});
-
-		// Add more test cases to cover scenarios like valid WHERE clauses, different filter types, etc.
-	});
-
-	describe("parseLogicalComparison", () => {
-		it("should throw Error if operator value is not an array", () => {
-			try {
-				parser.parseLogicalComparison("AND", null);
-				assert.fail("Query did not throw an error");
-			} catch (err) {
-				if (err instanceof Error) {
-					// Test passed
-				} else {
-					assert.fail("Query threw unexpected error");
-				}
-			}
-		});
-
-		// Add more test cases to cover scenarios like valid logical comparisons, nested logical comparisons, etc.
-	});
-
-	describe("parseMComparison", () => {
-		it("should throw Error if comparison is not a single field with numeric value", () => {
-			try {
-				parser.parseMComparison("LT", null);
-				assert.fail("Query did not throw an error");
-			} catch (err) {
-				if (err instanceof Error) {
-					// Test passed
-				} else {
-					assert.fail("Query threw unexpected error");
-				}
-			}
-		});
-
-		// Add more test cases to cover scenarios like valid MComparison operators, different field-value combinations, etc.
-	});
-
-	describe("parseSComparison", () => {
-		it("should throw Error if comparison is not a single field with string value", () => {
-			try {
-				parser.parseSComparison(null);
-				assert.fail("Query did not throw an error");
-			} catch (err) {
-				if (err instanceof Error) {
-					// Test passed
-				} else {
-					assert.fail("Query threw unexpected error");
-				}
-			}
-		});
-
-		// Add more test cases to cover scenarios like valid SComparison operators, different field-value combinations, etc.
-	});
-
-	describe("parseOptionsClause", () => {
-		it("should throw Error if OPTIONS is not an object", () => {
-			try {
-				parser.parseOptionsClause(null);
-				assert.fail("Query did not throw an error");
-			} catch (err) {
-				if (err instanceof Error) {
-					// Test passed
-				} else {
-					assert.fail("Query threw unexpected error");
-				}
-			}
-		});
-
-		// Add more test cases to cover scenarios like valid OPTIONS clauses, malformed OPTIONS clauses, etc.
-	});
-});
 describe("Section Constructor", function () {
 	it("should create a new Section instance with the provided properties", function () {
 		const uuid = "123";

@@ -291,11 +291,14 @@ export class Executor {
 		groupRows.forEach((row) => {
 			const value = row.get(targetField.split("_")[1]);
 			if (typeof value === "number") {
-				total = total.plus(value);
+				total = total.add(new Decimal(value));
 			}
 		});
-		const avg = total.div(groupRows.length);
-		return Number((avg.plus(Number.EPSILON)).toFixed(2));
+		if (groupRows.length === 0) {
+			throw new InsightError("No valid rows for average calculation");
+		}
+		const avg = total.toNumber() / (groupRows.length);
+		return Number(avg.toFixed(2));
 	}
 
 	private getSum(groupRows: Array<Section | Room>, targetField: string): number {
@@ -303,10 +306,11 @@ export class Executor {
 		groupRows.forEach((row) => {
 			const value = row.get(targetField.split("_")[1]);
 			if (typeof value === "number") {
-				total = total.plus(new Decimal(value));
+				total = total.add(new Decimal(value));
 			}
 		});
-		return Number((total.plus(Number.EPSILON)).toFixed(2));
+		const sum = total.toNumber();
+		return Number(sum.toFixed(2));
 	}
 
 	private getCount(groupRows: Array<Section | Room>, targetField: string): number {
