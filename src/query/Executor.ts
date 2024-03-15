@@ -302,14 +302,13 @@ export class Executor {
 	}
 
 	private getSum(groupRows: Array<Section | Room>, targetField: string): number {
-		let total = new Decimal(0);
-		groupRows.forEach((row) => {
+		return parseFloat(groupRows.reduce((total, row) => {
 			const value = row.get(targetField.split("_")[1]);
 			if (typeof value === "number") {
-				total = total.add(new Decimal(value));
+				total += value;
 			}
-		});
-		return Number(total.toFixed(2));
+			return total;
+		}, 0).toFixed(2));
 	}
 
 	private getCount(groupRows: Array<Section | Room>, targetField: string): number {
