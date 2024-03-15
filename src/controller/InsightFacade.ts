@@ -95,7 +95,7 @@ export default class InsightFacade implements IInsightFacade {
 			// Use QueryParser to parse the query
 			const parsedQuery = this.queryParser.parseQuery(query);
 			// console.log("-----------------------------PARSING START-----------------------------------------");
-			// console.log(parsedQuery);
+			console.log(parsedQuery.TRANSFORMATION?.APPLY);
 			// console.log("-----------------------------PARSING DONE-----------------------------------------");
 			const validatedQuery = this.queryValidator.validateQuery(parsedQuery);
 			// console.log("-----------------------------VALIDATOR DONE-----------------------------------------");
@@ -120,7 +120,6 @@ export default class InsightFacade implements IInsightFacade {
 				// console.log("-----------------------------TRANSFORMATION IS THERE----------------------------------");
 				filteredResults = this.queryExecutor.executeGroupAndApply(filteredResults, parsedQuery.TRANSFORMATION);
 				// console.log("-----------------------------GROUP AND APPLY STARTS------------------------------------");
-
 			}
 			// console.log("-----------------------------START OF FORMATTING------------------------------------");
 			let finalResults = this.queryExecutor.formatResults(filteredResults, parsedQuery.OPTIONS);
