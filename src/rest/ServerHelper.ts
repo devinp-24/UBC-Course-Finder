@@ -15,8 +15,7 @@ export default class ServerHelper {
 				res.status(400).json({error: "Invalid File"});
 				return;
 			}
-			const content = btoa(req.body);
-			// console.log(content);
+			const content: string = req.body.toString("base64");			// console.log(content);
 			const result = await this.insightFacade.addDataset(id, content, kind);
 			res.status(200).json({result});
 		} catch (error) {
