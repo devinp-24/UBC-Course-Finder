@@ -1,17 +1,19 @@
 import express, {Application, Request, Response} from "express";
 import * as http from "http";
 import cors from "cors";
+import ServerHelper from "./ServerHelper";
 
 export default class Server {
 	private readonly port: number;
 	private express: Application;
 	private server: http.Server | undefined;
+	private serverHelper: ServerHelper; // An instance of ServerHelper
 
 	constructor(port: number) {
 		console.info(`Server::<init>( ${port} )`);
 		this.port = port;
 		this.express = express();
-
+		this.serverHelper = new ServerHelper();
 		this.registerMiddleware();
 		this.registerRoutes();
 
@@ -29,6 +31,7 @@ export default class Server {
 	 * @returns {Promise<void>}
 	 */
 	public start(): Promise<void> {
+		console.log("STARTS");
 		return new Promise((resolve, reject) => {
 			console.info("Server::start() - start");
 			if (this.server !== undefined) {
@@ -82,10 +85,17 @@ export default class Server {
 	private registerRoutes() {
 		// This is an example endpoint this you can invoke by accessing this URL in your browser:
 		// http://localhost:4321/echo/hello
-		this.express.get("/echo/:msg", Server.echo);
 
 		// TODO: your other endpoints should go here
-
+		this.express.get("/echo/:msg", Server.echo);
+		this.express.put("/dataset/:id/:kind",
+			(req, res) => this.serverHelper.putDataset(req, res));
+		this.express.delete("/dataset/:id",
+			(req, res) => this.serverHelper.deleteDataset(req, res));
+		this.express.post("/query",
+			(req, res) => this.serverHelper.postQuery(req, res));
+		this.express.get("/datasets",
+			(req, res) => this.serverHelper.getDatasets(req, res));
 	}
 
 	// The next two methods handle the echo service.
