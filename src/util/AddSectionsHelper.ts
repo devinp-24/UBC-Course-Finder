@@ -9,7 +9,6 @@ export class AddSectionsHelper {
 
 		let dataset: CourseData;
 		let filePromises = Array<Promise<string>>();
-
 		const zip = await JSZip.loadAsync(content, {base64: true});
 		const coursesFolder = zip.folder("courses");
 

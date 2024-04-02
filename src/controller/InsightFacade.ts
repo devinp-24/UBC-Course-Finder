@@ -42,7 +42,7 @@ export default class InsightFacade implements IInsightFacade {
 	}
 
 	public async addDataset(id: string, content: string, kind: InsightDatasetKind): Promise<string[]> {
-
+		console.log("START OF ADD");
 		if (!id || id.includes("_") || id.trim() === "") {
 			throw new InsightError("Invalid ID (contains underscore)");
 		}
@@ -51,9 +51,11 @@ export default class InsightFacade implements IInsightFacade {
 		}
 
 		if (kind === InsightDatasetKind.Sections) {
+			console.log("Sections");
 			return this.adderSections.addSectionsDataset(id, content, this.datasetCollection,
 				this.courseDataCollection);
 		} else if (kind === InsightDatasetKind.Rooms) {
+			console.log("Rooms");
 			return this.adderRoom.addRoomsDataset(id, content, this.datasetCollection, this.courseDataCollection);
 		} else {
 			throw new InsightError("Invalid Kind Type");
