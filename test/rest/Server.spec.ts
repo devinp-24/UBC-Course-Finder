@@ -39,14 +39,13 @@ describe("Facade D3", function () {
 
 	// Sample on how to format PUT requests
 	it("PUT test for adding the 'pair' dataset", async function () {
-		// Assuming getContentFromArchives returns base64 encoded content
-		const ZIP_FILE_DATA = atob(pairzip);
+		const ZIP_FILE_DATA = Buffer.from(pairzip, "base64"); // Convert base64 string to buffer
 		const ENDPOINT_URL = "/dataset/pair/sections";
 
 		const response = await request(SERVER_URL)
 			.put(ENDPOINT_URL)
 			.set("Content-Type", "application/x-zip-compressed")
-			.send(ZIP_FILE_DATA)
+			.send(ZIP_FILE_DATA) // Send the buffer directly
 			.expect(200); // Expecting the request to succeed
 
 		expect(response.body).to.have.property("result");
@@ -54,18 +53,19 @@ describe("Facade D3", function () {
 	});
 
 	it("PUT test for adding the 'campus' dataset", async function () {
-		const ZIP_FILE_DATA = atob(campuszip);
+		const ZIP_FILE_DATA = Buffer.from(campuszip, "base64"); // Convert base64 string to buffer
 		const ENDPOINT_URL = "/dataset/campus/rooms";
 
 		const response = await request(SERVER_URL)
 			.put(ENDPOINT_URL)
 			.set("Content-Type", "application/x-zip-compressed")
-			.send(ZIP_FILE_DATA)
+			.send(ZIP_FILE_DATA) // Send the buffer directly
 			.expect(200); // Expecting the request to succeed
 
 		expect(response.body).to.have.property("result");
 		console.log("PUT test for adding the 'campus' dataset passed with response:", response.body);
 	});
+
 
 	it("DELETE test for a dataset", async function () {
 		const DATASET_ID = "pair"; // The id of the dataset you want to delete
