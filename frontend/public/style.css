@@ -1,14 +1,144 @@
-.button {
-    background-color: #3f51b5;
-    border: none;
-    color: white;
-    padding: 15px 32px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    font-size: 16px;
+body, html {
+	margin: 0;
+	padding: 0;
+	width: 100%;
+	height: 100%;
 }
 
-.button:hover {
-    cursor: pointer;
+.navbar {
+	width: 100%;
+	height: 7%;
+	background-color: #FF6B6B; /* Soft Blue */
+	display: flex;
+	justify-content: flex-end;
+	align-items: center; /* Center buttons vertically */
+}
+.navbar button {
+	background-color: #FF6B6B; /* Soft Blue */
+	color: #F5F5F5; /* Light Grey */
+	text-align: center;
+	padding: 10px 15px;
+	font-family: "Montserrat", sans-serif;
+	font-size: 16px;
+	cursor: pointer;
+	height: 100%;
+	border: none;
+	margin-left: 10px;
+}
+.main-content {
+	font-family: "Poppins", sans-serif;
+	width: 90%;
+	height: 93%;
+	margin: auto;
+	display: flex;
+	flex-direction: column;
+	justify-content: start;
+	align-items: center;
+}
+.hero-section {
+	margin-top: 20px;
+	text-align: center;
+	display: flex;
+	flex-direction: row;
+	height: 40%;
+	align-items: center;
+}
+
+.hero-headings {
+	width: 50%;
+	height: 100%;
+	align-items: center;
+	align-content: center;
+	border-right: 1px solid #FF6B6B;
+}
+
+.hero-text {
+	width: 50%;
+	height: 100%;
+	align-content: center;
+	align-items: center;
+}
+
+.hero-para {
+	margin-left: 30px;
+	font-family: "Poppins", sans-serif;
+	text-align: justify;
+}
+
+h1 {
+	font-size: 50px;
+}
+
+.feature-links {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-around;
+	width: 100%; /* Adjust as needed */
+	height: 100vh; /* Adjust as needed, or set to auto to let content determine the height */
+	margin-top: 50px;
+	margin-bottom: 50px;
+}
+.feature {
+	width: 20%; /* Adjust based on your needs */
+	border: 1px solid #ccc; /* Just for visual representation */
+	padding: 20px; /* Padding around the content */
+	box-sizing: border-box; /* To include padding and border in the element's total width and height */
+	text-align: center; /* Center the content */
+}
+
+.horizontal-line {
+	border: none;
+	border-top: 1px solid #ccc;
+	margin: 20px 0; /* Adjust the space around the line */
+	background-color: #000000;
+	border-color: #000000;
+}
+
+.feature .text {
+	margin-bottom: 20px; /* Space above the button */
+}
+
+.button-50 {
+	background-color: #000;
+	border: 1px solid #000;
+	border-radius: 4px;
+	box-shadow: #fff 4px 4px 0 0,#000 4px 4px 0 1px;
+	box-sizing: border-box;
+	color: #fff;
+	cursor: pointer;
+	display: inline-block;
+	font-family: "Poppins", sans-serif;
+	font-size: 14px;
+	font-weight: 400;
+	line-height: 20px;
+	margin: 0 5px 10px 0;
+	overflow: visible;
+	padding: 12px 40px;
+	text-align: center;
+	text-transform: none;
+	touch-action: manipulation;
+	user-select: none;
+	-webkit-user-select: none;
+	vertical-align: middle;
+	white-space: nowrap;
+}
+
+.button-50:hover {
+	background-color: #FF6B6B;
+}
+
+.button-50:active {
+	box-shadow: rgba(0, 0, 0, .125) 0 3px 5px inset;
+	outline: 0;
+}
+
+.button-50:not([disabled]):active {
+	box-shadow: #fff 2px 2px 0 0, #000 2px 2px 0 1px;
+	transform: translate(2px, 2px);
+}
+
+@media (min-width: 768px) {
+	.button-50 {
+		padding: 12px 50px;
+	}
 }

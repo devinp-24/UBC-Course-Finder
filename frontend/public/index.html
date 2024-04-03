@@ -1,12 +1,71 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
-    <title>310 Frontend</title>
-    <link href="/style.css" rel="stylesheet"/>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<title>310 Frontend</title>
+	<link href="/style.css" rel="stylesheet"/>
 </head>
 <body>
-<button id="click-me-button" class="button">Click Me!</button>
+<div class="navbar">
+	<button>Home</button>
+	<button>Add</button>
+	<button>Remove</button>
+	<button>List</button>
+	<button>Insights</button>
+</div>
+
+<div class="main-content">
+	<div class="hero-section">
+		<div class="hero-headings">
+			<h1>CPSC 310</h1>
+			<h2>Section Insights</h2>
+		</div>
+		<div class="hero-text">
+			<p class="hero-para">UBC is a big place, and involves a large number of people doing a variety of tasks.
+				The goal of this project is to enable effective querying of historical data regarding the university's
+				sections and rooms. </p>
+		</div>
+	</div>
+
+	<div class="feature-links">
+		<div class="feature" style="background-color: #CEFFC4">
+			<div style="width: 100%; height: 40%; justify-content: center; align-content: center;
+			justify-items: center; align-items: center; display: flex;">
+				<img width="100" height="100" src="https://img.icons8.com/ios/50/add--v1.png" alt="add--v1"/>
+			</div>
+			<hr class="horizontal-line">
+			<div class="text">Add a dataset to a collection of existing datasets</div>
+			<a href="addDataset.html" class="button-50">Add Dataset</a>
+		</div>
+		<div class="feature" style="background-color: #B3F9FF">
+			<div style="width: 100%; height: 40%; justify-content: center; align-content: center;
+			justify-items: center; align-items: center; display: flex;">
+				<img width="100" height="100" src="https://img.icons8.com/ios/50/delete-forever--v1.png" alt="delete-forever--v1"/>
+			</div>
+			<hr class="horizontal-line">
+			<div class="text">Remove a dataset from a collection of existing datasets</div>
+			<button class="button-50">Remove Dataset</button>
+		</div>
+		<div class="feature" style="background-color: #B9D4FF">
+			<div style="width: 100%; height: 40%; justify-content: center; align-content: center;
+			justify-items: center; align-items: center; display: flex;">
+				<img width="100" height="100" src="https://img.icons8.com/ios/50/list--v1.png" alt="list--v1"/>
+			</div>
+			<hr class="horizontal-line">
+			<div class="text">List all datasets from a collection of existing datasets</div>
+			<button class="button-50">List Datasets</button>
+		</div>
+		<div class="feature" style="background-color: #FFD1FF">
+			<div style="width: 100%; height: 40%; justify-content: center; align-content: center;
+			justify-items: center; align-items: center; display: flex;">
+				<img width="100" height="100" src="https://img.icons8.com/ios/50/graph--v1.png" alt="graph--v1"/>
+			</div>
+			<hr class="horizontal-line">
+			<div class="text">Perform Queries and Generate Plots on any of the existing datasets</div>
+			<button class="button-50">Get Insights</button>
+		</div>
+	</div>
+</div>
 
 <script type="text/javascript" src="/frontend.js"></script>
 </body>
