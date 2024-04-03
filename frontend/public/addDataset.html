@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Add Dataset</title>
+	<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="form-section">
+	<h1>Add a Sections Dataset</h1>
+	<form id="datasetForm">
+		<div>
+			<label for="datasetId">Dataset ID:</label>
+			<input type="text" id="datasetId" name="datasetId" required>
+		</div>
+		<div>
+			<label for="datasetFile">Dataset File:</label>
+			<input type="file" id="datasetFile" name="datasetFile" accept=".zip" required>
+		</div>
+		<button type="submit">Upload Dataset</button>
+	</form>
+	<div id="feedbackMessage"></div>
+</div>
+
+<script src="addDataset.js"></script>
+</body>
+</html>
