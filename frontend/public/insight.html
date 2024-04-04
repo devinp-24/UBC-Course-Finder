@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Dataset Insights</title>
+	<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="navbar">
+	<button onclick="window.location.href='http://localhost:4321/index.html';">Home</button>
+	<button onclick="window.location.href='http://localhost:4321/addDataset.html';">Add</button>
+	<button onclick="window.location.href='http://localhost:4321/removeDataset.html';">Remove</button>
+	<button onclick="window.location.href='http://localhost:4321/listDataset.html';">List</button>
+	<button onclick="window.location.href='http://localhost:4321/insight.html';">Insights</button>
+</div>
+
+<div class="content-div">
+	<div class="insights-section">
+		<h1>Dataset Insights</h1>
+		<label for="datasetSelector">Select a Dataset</label><select id="datasetSelector">
+		</select>
+		<label for="insightTypeSelector">Select type of Insight</label><select id="insightTypeSelector">
+		</select>
+		<button id="loadInsights">Load Insights</button>
+		<div class="insights-container">
+			<div id="insights"></div>
+		</div>
+	</div>
+</div>
+
+
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="insight.js"></script>
+</body>
+</html>
