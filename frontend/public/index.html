@@ -7,11 +7,11 @@
 </head>
 <body>
 <div class="navbar">
-	<button>Home</button>
-	<button>Add</button>
-	<button>Remove</button>
-	<button>List</button>
-	<button>Insights</button>
+	<button onclick="window.location.href='http://localhost:4321/index.html';">Home</button>
+	<button onclick="window.location.href='http://localhost:4321/addDataset.html';">Add</button>
+	<button onclick="window.location.href='http://localhost:4321/removeDataset.html';">Remove</button>
+	<button onclick="window.location.href='http://localhost:4321/listDataset.html';">List</button>
+	<button onclick="window.location.href='http://localhost:4321/insight.html';">Insights</button>
 </div>
 
 <div class="main-content">
@@ -44,7 +44,7 @@
 			</div>
 			<hr class="horizontal-line">
 			<div class="text">Remove a dataset from a collection of existing datasets</div>
-			<button class="button-50">Remove Dataset</button>
+			<a href="removeDataset.html" class="button-50">Remove Dataset</a>
 		</div>
 		<div class="feature" style="background-color: #B9D4FF">
 			<div style="width: 100%; height: 40%; justify-content: center; align-content: center;
@@ -53,7 +53,7 @@
 			</div>
 			<hr class="horizontal-line">
 			<div class="text">List all datasets from a collection of existing datasets</div>
-			<button class="button-50">List Datasets</button>
+			<a href="listDataset.html" class="button-50">List Datasets</a>
 		</div>
 		<div class="feature" style="background-color: #FFD1FF">
 			<div style="width: 100%; height: 40%; justify-content: center; align-content: center;
@@ -62,7 +62,7 @@
 			</div>
 			<hr class="horizontal-line">
 			<div class="text">Perform Queries and Generate Plots on any of the existing datasets</div>
-			<button class="button-50">Get Insights</button>
+			<a href="insight.html" class="button-50">Get Insights</a>
 		</div>
 	</div>
 </div>

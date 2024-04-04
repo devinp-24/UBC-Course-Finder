@@ -3,7 +3,7 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Add Dataset</title>
+	<title>List Datasets</title>
 	<link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -18,23 +18,11 @@
 
 <div class="content-div">
 	<div class="form-section">
-		<h1>Add a Sections Dataset</h1>
-		<form id="datasetForm">
-			<div>
-				<label for="datasetId">Dataset ID:</label>
-				<input type="text" id="datasetId" name="datasetId" required>
-			</div>
-			<div>
-				<label for="datasetFile">Dataset File:</label>
-				<input type="file" id="datasetFile" name="datasetFile" accept=".zip" required>
-			</div>
-			<button type="submit">Upload Dataset</button>
-		</form>
-		<div id="feedbackMessage"></div>
+		<h1>List of Added Datasets</h1>
+		<ul id="datasetList"></ul> <!-- This is where we'll append our list items -->
 	</div>
 </div>
 
-
-<script src="addDataset.js"></script>
+<script src="listDataset.js"></script>
 </body>
 </html>
