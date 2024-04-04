@@ -3,7 +3,7 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Add Dataset</title>
+	<title>Remove Dataset</title>
 	<link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -18,23 +18,19 @@
 
 <div class="content-div">
 	<div class="form-section">
-		<h1>Add a Sections Dataset</h1>
-		<form id="datasetForm">
+		<h1>Remove a Sections Dataset</h1>
+		<form id="removeDatasetForm">
 			<div>
-				<label for="datasetId">Dataset ID:</label>
-				<input type="text" id="datasetId" name="datasetId" required>
+				<label for="removeDatasetId">Dataset ID:</label>
+				<input type="text" id="removeDatasetId" name="removeDatasetId" required>
 			</div>
-			<div>
-				<label for="datasetFile">Dataset File:</label>
-				<input type="file" id="datasetFile" name="datasetFile" accept=".zip" required>
-			</div>
-			<button type="submit">Upload Dataset</button>
+			<button type="submit">Remove Dataset</button>
 		</form>
-		<div id="feedbackMessage"></div>
+		<div id="removeFeedbackMessage"></div>
 	</div>
 </div>
 
 
-<script src="addDataset.js"></script>
+<script src="removeDataset.js"></script>
 </body>
 </html>
